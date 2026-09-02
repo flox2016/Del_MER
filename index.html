@@ -167,6 +167,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .toast.show{opacity:1;transform:translateY(0)}
 [data-theme=dark] .toast{background:#e6edf3;color:#111}
 
+/* ── FILE PICKER ── */
+.file-pick-wrap{display:flex;flex-direction:column;gap:8px}
+.file-pick-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed var(--sky-deep);border-radius:8px;background:var(--bg);cursor:pointer;color:var(--sky-deep);font-weight:600;font-size:.88rem;transition:background .2s;width:100%}
+.file-pick-btn:hover{background:rgba(135,206,235,.12)}
+.file-pick-btn input[type=file]{display:none}
+.img-preview{width:100%;max-height:160px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:none}
+.img-preview.on{display:block}
+.img-preview-sq{width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid var(--border);display:none}
+.img-preview-sq.on{display:block}
+.file-uploading{font-size:.8rem;color:var(--sky-deep);display:none}
+.file-uploading.on{display:block}
+
 @media(max-width:600px){
   .login-box{padding:32px 18px 26px}
   .form-row{grid-template-columns:1fr}
@@ -255,8 +267,19 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <input class="inp" type="text" id="cfg-desc" placeholder="La mejor ropa de la zona">
     </div>
     <div class="form-group" style="margin-bottom:16px">
-      <label>URL de logo de tu tienda (opcional)</label>
-      <input class="inp" type="url" id="cfg-logo" placeholder="https://...">
+      <label>Logo de tu tienda (opcional)</label>
+      <div class="file-pick-wrap">
+        <label class="file-pick-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Elegir imagen
+          <input type="file" id="cfg-logo-file" accept="image/*" onchange="previewImg(this,'cfg-logo-preview-sq')">
+        </label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <img id="cfg-logo-preview-sq" class="img-preview-sq" alt="preview logo">
+          <span class="file-uploading" id="cfg-logo-uploading">⏳ Subiendo...</span>
+        </div>
+        <input type="hidden" id="cfg-logo">
+      </div>
     </div>
     <button class="btn-save" onclick="saveStoreConfig()">💾 Guardar configuración</button>
   </div>
@@ -284,8 +307,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>URL de imagen (opcional)</label>
-        <input class="inp" type="url" id="p-img" placeholder="https://...">
+        <label>Imagen del producto (opcional)</label>
+        <div class="file-pick-wrap">
+          <label class="file-pick-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Elegir imagen
+            <input type="file" id="p-img-file" accept="image/*" onchange="previewImg(this,'p-img-preview')">
+          </label>
+          <img id="p-img-preview" class="img-preview" alt="preview producto">
+          <span class="file-uploading" id="p-img-uploading">⏳ Subiendo...</span>
+          <input type="hidden" id="p-img">
+        </div>
       </div>
       <div class="form-group">
         <label>Emoji (si no hay imagen)</label>
@@ -510,6 +542,9 @@ async function loadOwnerPanel(user) {
   document.getElementById('cfg-wa').value = store.whatsapp || '';
   document.getElementById('cfg-desc').value = store.description || '';
   document.getElementById('cfg-logo').value = store.logo_url || '';
+  const logoPreview = document.getElementById('cfg-logo-preview-sq');
+  if(store.logo_url){ logoPreview.src=store.logo_url; logoPreview.classList.add('on'); }
+  else { logoPreview.src=''; logoPreview.classList.remove('on'); }
 
   loadOwnerProducts();
 }
@@ -574,6 +609,9 @@ async function editProduct(id){
   document.getElementById('p-price').value=data.price||'';
   document.getElementById('p-desc').value=data.description||'';
   document.getElementById('p-img').value=data.image_url||'';
+  const prevEl = document.getElementById('p-img-preview');
+  if(data.image_url){ prevEl.src=data.image_url; prevEl.classList.add('on'); }
+  else { prevEl.src=''; prevEl.classList.remove('on'); }
   document.getElementById('p-emoji').value=data.emoji||'';
   document.getElementById('p-multi').checked=!!data.multi_buyer;
   document.getElementById('p-visible').checked=!!data.visible;
@@ -588,6 +626,9 @@ function resetProdForm(){
   document.getElementById('p-price').value='';
   document.getElementById('p-desc').value='';
   document.getElementById('p-img').value='';
+  document.getElementById('p-img-file').value='';
+  const prev = document.getElementById('p-img-preview');
+  prev.src=''; prev.classList.remove('on');
   document.getElementById('p-emoji').value='';
   document.getElementById('p-multi').checked=false;
   document.getElementById('p-visible').checked=true;
@@ -624,6 +665,41 @@ async function saveProduct(){
   }
   resetProdForm();
   loadOwnerProducts();
+}
+
+// ── FILE PICKER & STORAGE ──
+function previewImg(input, previewId) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById(previewId);
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.classList.add('on');
+  };
+  reader.readAsDataURL(file);
+  // Upload automático al elegir
+  const uploadingId = input.id === 'p-img-file' ? 'p-img-uploading' : 'cfg-logo-uploading';
+  const hiddenId   = input.id === 'p-img-file' ? 'p-img'           : 'cfg-logo';
+  uploadImage(file, uploadingId, hiddenId);
+}
+
+async function uploadImage(file, uploadingId, hiddenId) {
+  const uploadingEl = document.getElementById(uploadingId);
+  uploadingEl.classList.add('on');
+  try {
+    const ext = file.name.split('.').pop();
+    const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const path = `delmer/${filename}`;
+    const { data, error } = await sb.storage.from('delmer-images').upload(path, file, { upsert: true });
+    if (error) { uploadingEl.textContent = '❌ Error al subir'; return; }
+    const { data: urlData } = sb.storage.from('delmer-images').getPublicUrl(path);
+    document.getElementById(hiddenId).value = urlData.publicUrl;
+    uploadingEl.textContent = '✅ Imagen subida';
+    setTimeout(() => { uploadingEl.classList.remove('on'); uploadingEl.textContent = '⏳ Subiendo...'; }, 2000);
+  } catch(e) {
+    uploadingEl.textContent = '❌ Error: ' + e.message;
+  }
 }
 
 // ── GROQ ──
