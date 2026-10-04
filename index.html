@@ -7,9 +7,33 @@
 <link id="favicon.png" rel="icon" href="A (1).png">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- QR: usamos varios CDNs como respaldo por si uno está bloqueado -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
-window.addEventListener('error',function(e){if(e.message&&e.message.includes('QRCode'))console.error('No se pudo cargar la librería QR:',e.message);});
+(function(){
+  function loadQrFallback(url, label){
+    if(typeof QRCode !== 'undefined' && typeof QRCode.toCanvas === 'function') return;
+    var s=document.createElement('script');
+    s.src=url;
+    s.async=false;
+    s.onload=function(){
+      console.log('QRCode cargado desde '+label);
+      window.dispatchEvent(new Event('qrcode-ready'));
+    };
+    s.onerror=function(){
+      console.error('No se pudo cargar QRCode desde '+label);
+    };
+    document.head.appendChild(s);
+  }
+  if(typeof QRCode === 'undefined' || typeof QRCode.toCanvas !== 'function'){
+    loadQrFallback('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js','cdnjs');
+  }
+  window.addEventListener('error',function(e){
+    if(e.message && e.message.includes('QRCode')){
+      console.error('No se pudo cargar la librería QR:',e.message);
+    }
+  });
+})();
 </script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <style>
@@ -1111,13 +1135,30 @@ function previewQR() {
   }
 
   if(typeof QRCode === 'undefined' || typeof QRCode.toCanvas !== 'function'){
-    console.error('QR: la librería QRCode no está disponible');
+    console.warn('QR: QRCode todavía no está disponible; esperando la librería...');
     ctx.fillStyle='#111';
     ctx.font='bold 14px Inter, sans-serif';
     ctx.textAlign='center';
-    ctx.fillText('No se pudo cargar el QR',125,118);
-    ctx.font='12px Inter, sans-serif';
-    ctx.fillText('Recargá la página',125,140);
+    ctx.fillText('Cargando QR...',125,125);
+    let tries=0;
+    const waitForQr=()=>{
+      if(typeof QRCode !== 'undefined' && typeof QRCode.toCanvas === 'function'){
+        previewQR();
+        return;
+      }
+      tries++;
+      if(tries<30){ setTimeout(waitForQr,200); }
+      else {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle='#111';
+        ctx.font='bold 14px Inter, sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText('No se pudo cargar el QR',125,118);
+        ctx.font='12px Inter, sans-serif';
+        ctx.fillText('Revisá tu conexión y recargá',125,140);
+      }
+    };
+    waitForQr();
     return;
   }
 
