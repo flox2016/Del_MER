@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Del_MER</title>
-<link id="favicon.png" rel="icon" href="A (1).png">
+<link id="favicon-link" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -1043,25 +1043,42 @@ let qrSelectedLogo = 'delmer';
 
 function renderQrStores() {
   const grid = document.getElementById('qr-stores-grid');
-  if(!myStores.length){grid.innerHTML='<div style="color:var(--muted);font-size:.88rem">No tenés tiendas todavía.</div>';return;}
+  if(!myStores.length){
+    grid.innerHTML='<div style="color:var(--muted);font-size:.88rem">No tenés tiendas todavía. Creá una primero.</div>';
+    return;
+  }
   grid.innerHTML = myStores.map(s=>`
-    <div class="qr-store-btn ${qrSelectedStore===s.id?'selected':''}" onclick="selectQrStore(${s.id},'${s.name}','${s.logo_url||''}')">
+    <div class="qr-store-btn ${qrSelectedStore===s.id?'selected':''}" id="qr-btn-${s.id}" onclick="selectQrStore(${s.id},'${encodeURIComponent(s.name)}','${s.logo_url||''}')">
       ${s.name}
     </div>
   `).join('');
-  if(myStores.length===1) selectQrStore(myStores[0].id, myStores[0].name, myStores[0].logo_url||'');
+  // Auto-seleccionar la primera o la que ya estaba seleccionada
+  const toSelect = qrSelectedStore && myStores.find(s=>s.id===qrSelectedStore)
+    ? myStores.find(s=>s.id===qrSelectedStore)
+    : myStores[0];
+  selectQrStore(toSelect.id, toSelect.name, toSelect.logo_url||'');
 }
 
 function selectQrStore(id, name, logoUrl) {
   qrSelectedStore = id;
+  // Decodificar nombre si viene encoded
+  const decodedName = typeof name === 'string' ? decodeURIComponent(name) : name;
   document.querySelectorAll('.qr-store-btn').forEach(b=>b.classList.remove('selected'));
-  event?.currentTarget?.classList.add('selected');
+  const btn = document.getElementById('qr-btn-'+id);
+  if(btn) btn.classList.add('selected');
   // Logo tienda
   const tiendaImg = document.getElementById('qr-logo-tienda-img');
   const tiendaPh = document.getElementById('qr-logo-tienda-ph');
-  if(logoUrl){tiendaImg.src=logoUrl;tiendaImg.style.display='block';tiendaPh.style.display='none';}
-  else{tiendaImg.style.display='none';tiendaPh.style.display='flex';}
-  previewQR();
+  if(logoUrl){
+    tiendaImg.src=logoUrl;
+    tiendaImg.style.display='block';
+    tiendaPh.style.display='none';
+  } else {
+    tiendaImg.style.display='none';
+    tiendaPh.style.display='flex';
+  }
+  // Pequeño delay para que el canvas esté listo
+  setTimeout(()=>previewQR(), 100);
 }
 
 function selectQrLogo(type) {
