@@ -8,6 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+window.addEventListener('error',function(e){if(e.message&&e.message.includes('QRCode'))console.error('No se pudo cargar la librería QR:',e.message);});
+</script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <style>
 :root{
@@ -478,7 +481,7 @@ img{max-width:100%}
     <div class="card">
       <div class="card-title">3. Vista previa</div>
       <div class="qr-canvas-wrap">
-        <canvas id="qr-canvas" width="250" height="250"></canvas>
+        <canvas id="qr-canvas" width="250" height="250" aria-label="Código QR"></canvas>
       </div>
       <div style="text-align:center;margin-bottom:14px">
         <span class="cost-chip">Costo: 20 ⭐</span>
@@ -1089,53 +1092,87 @@ function selectQrLogo(type) {
 }
 
 function previewQR() {
-  if(!qrSelectedStore) return;
-  const store = myStores.find(s=>s.id===qrSelectedStore);
-  if(!store) return;
-  const baseUrl = window.location.href.split('?')[0].replace(/#.*/,'');
-  const url = store.custom_slug
-    ? baseUrl.replace(/\/[^/]*$/, '/') + store.custom_slug
-    : `${baseUrl}?tienda=${store.id}`;
   const canvas = document.getElementById('qr-canvas');
-  QRCode.toCanvas(canvas, url, {width:250,margin:2,color:{dark:'#111111',light:'#ffffff'}}, err=>{
-    if(err){ console.error('QR error:',err); return; }
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  // Limpiar siempre el canvas para evitar que quede una vista anterior.
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  if(!qrSelectedStore){
+    console.warn('QR: no hay tienda seleccionada');
+    return;
+  }
+  const store = myStores.find(s=>String(s.id)===String(qrSelectedStore));
+  if(!store){
+    console.warn('QR: no se encontró la tienda seleccionada');
+    return;
+  }
+
+  if(typeof QRCode === 'undefined' || typeof QRCode.toCanvas !== 'function'){
+    console.error('QR: la librería QRCode no está disponible');
+    ctx.fillStyle='#111';
+    ctx.font='bold 14px Inter, sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('No se pudo cargar el QR',125,118);
+    ctx.font='12px Inter, sans-serif';
+    ctx.fillText('Recargá la página',125,140);
+    return;
+  }
+
+  const baseUrl = window.location.href.split('?')[0].replace(/#.*/,'');
+  let url;
+  if(store.custom_slug){
+    const cleanBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+    url = cleanBase + encodeURIComponent(store.custom_slug);
+  } else {
+    url = baseUrl + '?tienda=' + encodeURIComponent(store.id);
+  }
+
+  QRCode.toCanvas(canvas, url, {
+    width:250,
+    height:250,
+    margin:3,
+    errorCorrectionLevel:'H',
+    color:{dark:'#111111',light:'#ffffff'}
+  }, err=>{
+    if(err){
+      console.error('QR error:',err);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle='#111';
+      ctx.font='bold 14px Inter, sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText('Error al generar el QR',125,125);
+      return;
+    }
+
     const logoSrc = qrSelectedLogo==='delmer'
       ? 'data:image/png;base64,'+LOGO_B64
       : (store.logo_url||null);
     if(!logoSrc) return;
-    const ctx = canvas.getContext('2d');
+
     const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const sz = 54;
-      const x = (canvas.width-sz)/2;
-      const y = (canvas.height-sz)/2;
-      const pad = 5;
-      // Fondo blanco redondeado (compatible sin roundRect)
-      ctx.fillStyle = '#ffffff';
+    img.crossOrigin='anonymous';
+    img.onload=()=>{
+      const sz=50, pad=6;
+      const x=(canvas.width-sz)/2, y=(canvas.height-sz)/2;
+      ctx.fillStyle='#fff';
       ctx.beginPath();
-      const rx = x-pad, ry = y-pad, rw = sz+pad*2, rh = sz+pad*2, r = 8;
-      ctx.moveTo(rx+r, ry);
-      ctx.lineTo(rx+rw-r, ry);
-      ctx.quadraticCurveTo(rx+rw, ry, rx+rw, ry+r);
-      ctx.lineTo(rx+rw, ry+rh-r);
-      ctx.quadraticCurveTo(rx+rw, ry+rh, rx+rw-r, ry+rh);
-      ctx.lineTo(rx+r, ry+rh);
-      ctx.quadraticCurveTo(rx, ry+rh, rx, ry+rh-r);
-      ctx.lineTo(rx, ry+r);
-      ctx.quadraticCurveTo(rx, ry, rx+r, ry);
-      ctx.closePath();
-      ctx.fill();
-      ctx.drawImage(img, x, y, sz, sz);
+      const rx=x-pad, ry=y-pad, rw=sz+pad*2, rh=sz+pad*2, r=9;
+      ctx.moveTo(rx+r,ry); ctx.lineTo(rx+rw-r,ry);
+      ctx.quadraticCurveTo(rx+rw,ry,rx+rw,ry+r);
+      ctx.lineTo(rx+rw,ry+rh-r); ctx.quadraticCurveTo(rx+rw,ry+rh,rx+rw-r,ry+rh);
+      ctx.lineTo(rx+r,ry+rh); ctx.quadraticCurveTo(rx,ry+rh,rx,ry+rh-r);
+      ctx.lineTo(rx,ry+r); ctx.quadraticCurveTo(rx,ry,rx+r,ry);
+      ctx.closePath(); ctx.fill();
+      try { ctx.drawImage(img,x,y,sz,sz); }
+      catch(e){ console.warn('QR: no se pudo colocar el logo:',e); }
     };
-    img.onerror = () => {
-      // Si falla la imagen igual muestra el QR sin logo
-      console.warn('No se pudo cargar el logo para el QR');
-    };
-    img.src = logoSrc;
+    img.onerror=()=>console.warn('QR: no se pudo cargar el logo; se muestra el QR sin logo.');
+    img.src=logoSrc;
   });
 }
-
 async function generateAndDownloadQR() {
   if(!qrSelectedStore){toast('⚠️ Seleccioná una tienda primero');return;}
   if(userCredits < 20){toast('⚠️ Necesitás 20 créditos para descargar el QR');return;}
