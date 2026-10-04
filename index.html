@@ -1178,7 +1178,9 @@ function drawQrLogo(ctx, store){
   const img = new Image();
   img.crossOrigin='anonymous';
   img.onload=()=>{
-    const sz=50, pad=6;
+    // Logo pequeño para no tapar demasiados módulos del QR.
+    // Con corrección de errores H, 30px mantiene el QR mucho más fácil de escanear.
+    const sz=30, pad=5;
     const x=(250-sz)/2, y=(250-sz)/2;
     ctx.fillStyle='#fff';
     ctx.beginPath();
