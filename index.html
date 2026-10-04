@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -390,7 +391,10 @@ img{max-width:100%}
         <button class="btn-sm" onclick="openCustomLink()">✨ Link personalizado <span class="cost-chip" style="margin-left:4px">100 ⭐</span></button>
         <button class="btn-sm" onclick="publishStore()">🚀 Publicar tienda <span class="cost-chip" style="margin-left:4px">10 ⭐</span></button>
       </div>
-      <button class="btn-save" onclick="saveStoreConfig()">💾 Guardar configuración</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+        <button class="btn-save" onclick="saveStoreConfig()">💾 Guardar configuración</button>
+        <button class="btn-danger" onclick="deleteStore()">🗑 Borrar tienda</button>
+      </div>
     </div>
 
     <!-- Nuevo producto -->
@@ -827,6 +831,18 @@ async function saveStoreConfig() {
   toast('✅ Configuración guardada');
 }
 
+async function deleteStore() {
+  const store = myStores.find(s=>s.id===currentStoreId);
+  if(!store) return;
+  if(!confirm(`¿Borrar la tienda "${store.name}"? Se eliminarán todos sus productos. Esta acción no se puede deshacer.`)) return;
+  const {error} = await sb.from('delmer_stores').delete().eq('id', currentStoreId);
+  if(error){toast('❌ Error: '+error.message);return;}
+  myStores = myStores.filter(s=>s.id!==currentStoreId);
+  currentStoreId = null;
+  toast('🗑 Tienda eliminada');
+  goTo('tiendas');
+}
+
 async function publishStore() {
   if(userCredits < 10){toast('⚠️ Necesitás al menos 10 créditos para publicar');return;}
   if(!confirm('¿Publicar esta tienda? Cuesta 10 créditos.')) return;
@@ -1065,22 +1081,39 @@ function previewQR() {
     : `${baseUrl}?tienda=${store.id}`;
   const canvas = document.getElementById('qr-canvas');
   QRCode.toCanvas(canvas, url, {width:250,margin:2,color:{dark:'#111111',light:'#ffffff'}}, err=>{
-    if(err) return;
-    // Dibujar logo encima
-    const ctx = canvas.getContext('2d');
+    if(err){ console.error('QR error:',err); return; }
     const logoSrc = qrSelectedLogo==='delmer'
       ? 'data:image/png;base64,'+LOGO_B64
       : (store.logo_url||null);
     if(!logoSrc) return;
+    const ctx = canvas.getContext('2d');
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
       const sz = 54;
       const x = (canvas.width-sz)/2;
       const y = (canvas.height-sz)/2;
-      ctx.fillStyle='#fff';
-      ctx.roundRect(x-4,y-4,sz+8,sz+8,8);
+      const pad = 5;
+      // Fondo blanco redondeado (compatible sin roundRect)
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      const rx = x-pad, ry = y-pad, rw = sz+pad*2, rh = sz+pad*2, r = 8;
+      ctx.moveTo(rx+r, ry);
+      ctx.lineTo(rx+rw-r, ry);
+      ctx.quadraticCurveTo(rx+rw, ry, rx+rw, ry+r);
+      ctx.lineTo(rx+rw, ry+rh-r);
+      ctx.quadraticCurveTo(rx+rw, ry+rh, rx+rw-r, ry+rh);
+      ctx.lineTo(rx+r, ry+rh);
+      ctx.quadraticCurveTo(rx, ry+rh, rx, ry+rh-r);
+      ctx.lineTo(rx, ry+r);
+      ctx.quadraticCurveTo(rx, ry, rx+r, ry);
+      ctx.closePath();
       ctx.fill();
-      ctx.drawImage(img,x,y,sz,sz);
+      ctx.drawImage(img, x, y, sz, sz);
+    };
+    img.onerror = () => {
+      // Si falla la imagen igual muestra el QR sin logo
+      console.warn('No se pudo cargar el logo para el QR');
     };
     img.src = logoSrc;
   });
@@ -1266,3 +1299,4 @@ async function init(){
 init();
 </script>
 </body>
+</html>
