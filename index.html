@@ -2,212 +2,280 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/png" href="A (1).png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Del_MER</title>
+<link id="favicon.png" rel="icon" href="A (1).png">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <style>
-:root {
-  --sky:#87CEEB; --sky-deep:#5aafd4; --gold:#F5C518;
-  --bg:#f0f8ff; --card:#fff; --text:#111; --muted:#666;
-  --border:#d0e8f5; --input:#fff; --shadow:0 2px 16px rgba(135,206,235,.18);
-  --radius:14px; --danger:#ef4444; --success:#22c55e;
+:root{
+  --sky:#87CEEB;--sky-deep:#5aafd4;--gold:#F5C518;
+  --bg:#f0f8ff;--card:#fff;--text:#111;--muted:#666;
+  --border:#d0e8f5;--inp:#fff;--shadow:0 2px 16px rgba(135,206,235,.18);
+  --r:14px;--danger:#ef4444;--ok:#22c55e;
 }
 [data-theme=dark]{
-  --bg:#0d1117; --card:#161b22; --text:#e6edf3; --muted:#8b949e;
-  --border:#21262d; --input:#1c2128; --shadow:0 2px 16px rgba(0,0,0,.4);
+  --bg:#0d1117;--card:#161b22;--text:#e6edf3;--muted:#8b949e;
+  --border:#21262d;--inp:#1c2128;--shadow:0 2px 20px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+img{max-width:100%}
 
-/* ── SCREENS ── */
-.screen{display:none}
-.screen.on{display:block}
-.screen.flex-on{display:flex}
-
-/* ── LOADING ── */
-#scr-loading{position:fixed;inset:0;background:var(--bg);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+/* LOADING */
+#scr-loading{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#scr-loading.off{display:none}
 .spinner{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--sky-deep);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── LOGIN ── */
-#scr-login{min-height:100vh;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#e8f6ff 0%,#f0f8ff 40%,#fff 100%)}
+/* LOGIN */
+#scr-login{min-height:100vh;display:none;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#e8f6ff 0%,#f0f8ff 50%,#fff 100%)}
 [data-theme=dark] #scr-login{background:linear-gradient(160deg,#0d1117 0%,#0f1923 100%)}
-.login-box{background:var(--card);border-radius:24px;padding:44px 40px 36px;width:100%;max-width:420px;box-shadow:var(--shadow),0 0 0 1px var(--border);display:flex;flex-direction:column;align-items:center;gap:18px}
-.login-logo{width:200px;height:auto;filter:drop-shadow(0 4px 12px rgba(135,206,235,.35))}
+#scr-login.on{display:flex}
+.login-box{background:var(--card);border-radius:24px;padding:42px 38px 34px;width:100%;max-width:420px;box-shadow:var(--shadow),0 0 0 1px var(--border);display:flex;flex-direction:column;align-items:center;gap:16px}
+.login-logo{width:190px;height:auto;filter:drop-shadow(0 4px 12px rgba(135,206,235,.3))}
 .login-title{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--text);text-align:center}
-.login-sub{font-size:.88rem;color:var(--muted);text-align:center;margin-top:-10px}
+.login-sub{font-size:.86rem;color:var(--muted);text-align:center;margin-top:-8px}
 .tabs{display:flex;width:100%;background:var(--bg);border-radius:10px;padding:4px;gap:4px}
-.tab{flex:1;padding:8px;border:none;background:transparent;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:.9rem;cursor:pointer;color:var(--muted);transition:all .2s}
+.tab{flex:1;padding:8px;border:none;background:transparent;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;color:var(--muted);transition:all .2s}
 .tab.active{background:var(--card);color:var(--sky-deep);box-shadow:0 1px 6px rgba(0,0,0,.1)}
-.inp{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.95rem;background:var(--input);color:var(--text);outline:none;transition:border .2s}
+.inp{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:.92rem;background:var(--inp);color:var(--text);outline:none;transition:border .2s}
 .inp:focus{border-color:var(--sky-deep)}
-.btn-main{width:100%;padding:13px;background:linear-gradient(135deg,var(--sky) 0%,var(--sky-deep) 100%);color:#fff;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.05em;cursor:pointer;transition:opacity .2s,transform .1s}
-.btn-main:hover{opacity:.9;transform:translateY(-1px)}
-.btn-google{width:100%;padding:12px;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.95rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s,border .2s}
-.btn-google:hover{border-color:var(--sky-deep);background:var(--bg)}
-.divider{display:flex;align-items:center;gap:10px;width:100%;color:var(--muted);font-size:.8rem}
+.btn-main{width:100%;padding:13px;background:linear-gradient(135deg,var(--sky),var(--sky-deep));color:#fff;border:none;border-radius:9px;font-family:'Barlow Condensed',sans-serif;font-size:1.08rem;font-weight:700;letter-spacing:.05em;cursor:pointer;transition:opacity .2s}
+.btn-main:hover{opacity:.9}
+.btn-google{width:100%;padding:11px;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:.92rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .2s}
+.btn-google:hover{border-color:var(--sky-deep)}
+.divider{display:flex;align-items:center;gap:9px;width:100%;color:var(--muted);font-size:.78rem}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .recaptcha-wrap{display:flex;justify-content:center;width:100%}
-.msg-error{background:#fee2e2;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:.88rem;width:100%;display:none}
-.msg-ok{background:#dcfce7;color:#16a34a;border-radius:8px;padding:10px 14px;font-size:.88rem;width:100%;display:none}
+.msg-err{background:#fee2e2;color:#dc2626;border-radius:8px;padding:9px 13px;font-size:.86rem;width:100%;display:none}
+.msg-ok{background:#dcfce7;color:#16a34a;border-radius:8px;padding:9px 13px;font-size:.86rem;width:100%;display:none}
 
-/* ── NAVBAR ── */
-#navbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:none;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(135,206,235,.12)}
-#navbar.on{display:flex}
-.nav-logo{height:40px;width:auto}
-.nav-right{display:flex;align-items:center;gap:12px}
+/* APP LAYOUT */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.on{display:flex}
+
+/* NAVBAR */
+.navbar{background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:0;position:sticky;top:0;z-index:200;box-shadow:0 1px 8px rgba(135,206,235,.1);height:58px;flex-shrink:0}
+.nav-brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+.nav-brand-logo{height:38px;width:auto;cursor:pointer}
+.nav-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border:none;background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:.86rem;font-weight:600;cursor:pointer;border-radius:8px;transition:all .2s;white-space:nowrap}
+.nav-btn:hover{background:var(--bg);color:var(--sky-deep)}
+.nav-btn.active{background:rgba(135,206,235,.15);color:var(--sky-deep)}
+.nav-btn svg{width:16px;height:16px;flex-shrink:0}
+.nav-right{display:flex;align-items:center;gap:8px;margin-left:12px}
+.credits-chip{background:linear-gradient(135deg,#fff8e1,#fff3cc);border:1px solid var(--gold);border-radius:20px;padding:4px 11px;font-size:.8rem;font-weight:700;color:#b8860b;display:flex;align-items:center;gap:5px;cursor:default}
+[data-theme=dark] .credits-chip{background:rgba(245,197,24,.15);color:#f5c518;border-color:rgba(245,197,24,.4)}
+.theme-btn{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:.78rem;cursor:pointer;color:var(--text);font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px}
+.theme-btn:hover{border-color:var(--sky-deep)}
 .btn-icon{background:none;border:none;cursor:pointer;color:var(--muted);padding:6px;border-radius:8px;transition:background .2s;display:flex;align-items:center}
 .btn-icon:hover{background:var(--bg);color:var(--sky-deep)}
-.theme-btn{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:.8rem;cursor:pointer;color:var(--text);font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;gap:6px}
-.theme-btn:hover{border-color:var(--sky-deep)}
 
-/* ── DASHBOARD DUEÑO ── */
-#scr-owner{padding:28px 24px 80px;max-width:960px;margin:0 auto}
-.section-title{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;margin-bottom:18px;color:var(--text)}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:var(--shadow)}
-.card-title{font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:800;margin-bottom:14px;color:var(--text)}
+/* SCREENS */
+.screen{display:none;flex:1;padding:24px;max-width:1000px;margin:0 auto;width:100%}
+.screen.on{display:block}
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:1.65rem;font-weight:900;margin-bottom:18px;color:var(--text)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:13px;color:var(--text)}
+
+/* CASA */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:5px;box-shadow:var(--shadow)}
+.stat-icon{font-size:1.4rem}
+.stat-lbl{font-size:.78rem;color:var(--muted);font-weight:600}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:1.9rem;font-weight:900;color:var(--text)}
+
+/* TIENDAS */
+.stores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:20px}
+.store-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow);cursor:pointer;transition:transform .2s,box-shadow .2s}
+.store-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(135,206,235,.22)}
+.store-card-logo{width:52px;height:52px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
+.store-card-logo-ph{width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,var(--sky),var(--sky-deep));display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.store-card-name{font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:800;color:var(--text)}
+.store-card-desc{font-size:.8rem;color:var(--muted)}
+.store-card-badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:.72rem;font-weight:700}
+.badge-on{background:rgba(34,197,94,.13);color:#16a34a}
+.badge-off{background:rgba(239,68,68,.11);color:#dc2626}
+.badge-credits{background:rgba(245,197,24,.15);color:#b8860b;border:1px solid rgba(245,197,24,.4)}
+[data-theme=dark] .badge-on{color:#4ade80}
+[data-theme=dark] .badge-off{color:#f87171}
+.btn-new-store{display:flex;align-items:center;justify-content:center;gap:8px;padding:18px;border:2px dashed var(--sky-deep);border-radius:var(--r);background:transparent;color:var(--sky-deep);font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;cursor:pointer;transition:background .2s;width:100%}
+.btn-new-store:hover{background:rgba(135,206,235,.08)}
+
+/* EDITOR TIENDA */
+.back-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--sky-deep);font-family:'Inter',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;margin-bottom:16px;padding:0}
+.back-btn:hover{opacity:.75}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.form-group{display:flex;flex-direction:column;gap:5px}
-.form-group label{font-size:.8rem;font-weight:600;color:var(--muted)}
-.form-group input,.form-group textarea,.form-group select{padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.9rem;background:var(--input);color:var(--text);outline:none;transition:border .2s;width:100%}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.form-group label{font-size:.78rem;font-weight:600;color:var(--muted)}
+.form-group input,.form-group textarea,.form-group select{padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.88rem;background:var(--inp);color:var(--text);outline:none;transition:border .2s;width:100%}
 .form-group input:focus,.form-group textarea:focus{border-color:var(--sky-deep)}
-.form-group textarea{resize:vertical;min-height:68px}
-.btn-save{padding:11px 26px;background:linear-gradient(135deg,var(--sky) 0%,var(--sky-deep) 100%);color:#fff;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;cursor:pointer;transition:opacity .2s}
+.form-group textarea{resize:vertical;min-height:66px}
+.btn-save{padding:10px 24px;background:linear-gradient(135deg,var(--sky),var(--sky-deep));color:#fff;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .2s}
 .btn-save:hover{opacity:.88}
 .btn-danger{padding:8px 14px;background:var(--danger);color:#fff;border:none;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .2s}
 .btn-danger:hover{opacity:.85}
-.btn-sm{padding:7px 14px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--text);transition:all .2s}
+.btn-sm{padding:7px 13px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:.8rem;font-weight:600;cursor:pointer;color:var(--text);transition:all .2s}
 .btn-sm:hover{border-color:var(--sky-deep);color:var(--sky-deep)}
-.checkbox-row{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--bg);border-radius:8px;border:1px solid var(--border);cursor:pointer;margin-bottom:14px}
-.checkbox-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--sky-deep);cursor:pointer}
-.checkbox-row label{font-size:.9rem;font-weight:500;color:var(--text);cursor:pointer}
-
-/* link de tienda */
-.store-link-box{display:flex;align-items:center;gap:10px;background:var(--bg);border:1.5px dashed var(--sky-deep);border-radius:10px;padding:12px 16px;margin-bottom:14px}
-.store-link-url{font-size:.85rem;color:var(--sky-deep);font-weight:600;word-break:break-all;flex:1}
-.btn-copy{padding:7px 14px;background:var(--sky-deep);color:#fff;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .2s}
+.store-link-box{display:flex;align-items:center;gap:10px;background:var(--bg);border:1.5px dashed var(--sky-deep);border-radius:9px;padding:11px 14px;margin-bottom:12px}
+.store-link-url{font-size:.83rem;color:var(--sky-deep);font-weight:600;word-break:break-all;flex:1}
+.btn-copy{padding:6px 13px;background:var(--sky-deep);color:#fff;border:none;border-radius:7px;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .2s}
 .btn-copy:hover{opacity:.85}
+.checkbox-row{display:flex;align-items:center;gap:9px;padding:10px 13px;background:var(--bg);border-radius:8px;border:1px solid var(--border);cursor:pointer;margin-bottom:12px}
+.checkbox-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--sky-deep);cursor:pointer;flex-shrink:0}
+.checkbox-row label{font-size:.88rem;font-weight:500;color:var(--text);cursor:pointer}
 
-/* productos table */
+/* PRODUCTOS TABLE */
 .prod-table{width:100%;border-collapse:collapse}
-.prod-table th,.prod-table td{padding:11px 13px;text-align:left;border-bottom:1px solid var(--border);font-size:.87rem}
-.prod-table th{font-weight:700;color:var(--muted);font-size:.76rem;text-transform:uppercase;letter-spacing:.04em}
+.prod-table th,.prod-table td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:.84rem}
+.prod-table th{font-weight:700;color:var(--muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em}
 .prod-table tr:hover td{background:var(--bg)}
-.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:.73rem;font-weight:700}
-.badge-on{background:rgba(34,197,94,.13);color:#16a34a}
-.badge-off{background:rgba(239,68,68,.11);color:#dc2626}
-[data-theme=dark] .badge-on{color:#4ade80}
-[data-theme=dark] .badge-off{color:#f87171}
 
-/* groq */
-.groq-box{background:rgba(135,206,235,.07);border:1px dashed var(--sky);border-radius:10px;padding:14px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px}
-.groq-out{font-size:.83rem;color:var(--sky-deep);font-style:italic;min-height:38px;padding:8px 11px;background:var(--card);border-radius:7px;border:1px solid var(--border)}
-.btn-groq{padding:8px 16px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;align-self:flex-start;transition:opacity .2s}
+/* FILE PICKER */
+.file-pick-wrap{display:flex;flex-direction:column;gap:7px}
+.file-pick-btn{display:flex;align-items:center;gap:9px;padding:9px 13px;border:1.5px dashed var(--sky-deep);border-radius:8px;background:var(--bg);cursor:pointer;color:var(--sky-deep);font-weight:600;font-size:.85rem;transition:background .2s;width:100%}
+.file-pick-btn:hover{background:rgba(135,206,235,.12)}
+.file-pick-btn input[type=file]{display:none}
+.img-preview{width:100%;max-height:140px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:none}
+.img-preview.on{display:block}
+.img-preview-sq{width:68px;height:68px;object-fit:cover;border-radius:9px;border:1px solid var(--border);display:none}
+.img-preview-sq.on{display:block}
+.upload-status{font-size:.78rem;color:var(--sky-deep);display:none}
+.upload-status.on{display:block}
+
+/* GROQ */
+.groq-box{background:rgba(135,206,235,.07);border:1px dashed var(--sky);border-radius:9px;padding:13px;margin-bottom:14px;display:flex;flex-direction:column;gap:9px}
+.groq-out{font-size:.81rem;color:var(--sky-deep);font-style:italic;min-height:36px;padding:7px 10px;background:var(--card);border-radius:7px;border:1px solid var(--border)}
+.btn-groq{padding:7px 14px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;align-self:flex-start;transition:opacity .2s}
 .btn-groq:hover{opacity:.88}
 
-/* ── TIENDA PÚBLICA ── */
-#scr-store{display:none}
-#scr-store.on{display:block}
-.store-hero{padding:36px 24px 28px;max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:22px}
-.store-hero-logo{width:90px;height:90px;object-fit:cover;border-radius:16px;border:2px solid var(--border);background:var(--bg)}
-.store-hero-logo-placeholder{width:90px;height:90px;border-radius:16px;border:2px solid var(--border);background:linear-gradient(135deg,var(--sky),var(--sky-deep));display:flex;align-items:center;justify-content:center;font-size:2.4rem;flex-shrink:0}
-.store-hero-info{}
-.store-name-pub{font-family:'Barlow Condensed',sans-serif;font-size:2.4rem;font-weight:900;color:var(--text);line-height:1}
-.store-desc-pub{font-size:.92rem;color:var(--muted);margin-top:5px}
-.store-powered{font-size:.75rem;color:var(--muted);margin-top:8px}
-.store-powered a{color:var(--sky-deep);text-decoration:none;font-weight:600}
-.pub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;padding:0 24px 80px;max-width:1100px;margin:0 auto}
-.prod-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column}
+/* QR */
+.qr-stores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.qr-store-btn{padding:14px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--card);cursor:pointer;text-align:center;transition:all .2s;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;color:var(--text)}
+.qr-store-btn:hover,.qr-store-btn.selected{border-color:var(--sky-deep);background:rgba(135,206,235,.1);color:var(--sky-deep)}
+.qr-logo-opts{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.qr-logo-opt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s;flex:1;min-width:120px}
+.qr-logo-opt:hover,.qr-logo-opt.selected{border-color:var(--sky-deep);background:rgba(135,206,235,.1)}
+.qr-logo-opt img{width:50px;height:50px;object-fit:cover;border-radius:8px}
+.qr-logo-opt span{font-size:.8rem;font-weight:600;color:var(--text);text-align:center}
+.qr-canvas-wrap{display:flex;justify-content:center;margin:16px 0}
+#qr-canvas{border-radius:10px;border:1px solid var(--border)}
+.cost-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.4);border-radius:20px;padding:4px 12px;font-size:.82rem;font-weight:700;color:#b8860b}
+[data-theme=dark] .cost-chip{color:#f5c518}
+
+/* SUSCRIPCION */
+.plans-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.plan-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:10px;transition:all .2s;cursor:pointer}
+.plan-card:hover{border-color:var(--sky-deep);transform:translateY(-2px)}
+.plan-card.active-plan{border-color:var(--sky-deep);background:rgba(135,206,235,.07)}
+.plan-name{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;color:var(--text)}
+.plan-price{font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:900;color:var(--sky-deep)}
+.plan-price span{font-size:.85rem;font-weight:500;color:var(--muted)}
+.plan-credits{font-size:.85rem;color:var(--muted);font-weight:600}
+.plan-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700;align-self:flex-start}
+.plan-current{background:rgba(34,197,94,.15);color:#16a34a}
+[data-theme=dark] .plan-current{color:#4ade80}
+.btn-plan{padding:10px;background:linear-gradient(135deg,var(--sky),var(--sky-deep));color:#fff;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .2s;width:100%}
+.btn-plan:hover{opacity:.88}
+.btn-plan.current{background:var(--bg);color:var(--sky-deep);border:1.5px solid var(--sky-deep)}
+
+/* TIENDA PÚBLICA */
+#scr-public{display:none;min-height:100vh;flex-direction:column}
+#scr-public.on{display:flex}
+.pub-navbar{background:var(--card);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.pub-store-info{display:flex;align-items:center;gap:12px}
+.pub-logo{width:44px;height:44px;object-fit:cover;border-radius:9px;border:1px solid var(--border)}
+.pub-logo-ph{width:44px;height:44px;border-radius:9px;background:linear-gradient(135deg,var(--sky),var(--sky-deep));display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+.pub-store-name{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;color:var(--text)}
+.pub-store-desc{font-size:.78rem;color:var(--muted)}
+.pub-powered{font-size:.72rem;color:var(--muted)}
+.pub-powered a{color:var(--sky-deep);text-decoration:none;font-weight:600}
+.pub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;padding:24px;max-width:1100px;margin:0 auto;width:100%}
+.prod-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column}
 .prod-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(135,206,235,.22)}
-.prod-img{width:100%;height:170px;object-fit:cover}
-.prod-img-ph{width:100%;height:170px;background:linear-gradient(135deg,#e8f6ff,#c5e8f7);display:flex;align-items:center;justify-content:center;font-size:2.8rem}
-.prod-body{padding:14px;flex:1;display:flex;flex-direction:column;gap:7px}
-.prod-name{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;color:var(--text);line-height:1.2}
-.prod-desc{font-size:.82rem;color:var(--muted);line-height:1.5;flex:1}
-.prod-price{font-family:'Barlow Condensed',sans-serif;font-size:1.65rem;font-weight:900;color:var(--sky-deep)}
-.multi-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#fff8e1,#fff3cc);border:1px solid #f5c518;border-radius:20px;padding:3px 9px;font-size:.75rem;font-weight:600;color:#b8860b}
+.prod-img{width:100%;height:165px;object-fit:cover}
+.prod-img-ph{width:100%;height:165px;background:linear-gradient(135deg,#e8f6ff,#c5e8f7);display:flex;align-items:center;justify-content:center;font-size:2.6rem}
+.prod-body{padding:13px;flex:1;display:flex;flex-direction:column;gap:6px}
+.prod-name{font-family:'Barlow Condensed',sans-serif;font-size:1.18rem;font-weight:700;color:var(--text);line-height:1.2}
+.prod-desc-pub{font-size:.8rem;color:var(--muted);line-height:1.5;flex:1}
+.prod-price{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;color:var(--sky-deep)}
+.multi-badge{display:inline-flex;align-items:center;gap:4px;background:#fff8e1;border:1px solid #f5c518;border-radius:20px;padding:3px 8px;font-size:.73rem;font-weight:600;color:#b8860b}
 [data-theme=dark] .multi-badge{background:rgba(245,197,24,.13);color:#f5c518;border-color:rgba(245,197,24,.4)}
-.groq-tip{font-size:.78rem;color:var(--sky-deep);font-style:italic;background:rgba(135,206,235,.09);border-left:3px solid var(--sky);padding:5px 9px;border-radius:0 6px 6px 0}
-.btn-buy{width:100%;padding:10px;background:linear-gradient(135deg,var(--sky) 0%,var(--sky-deep) 100%);color:#fff;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:.98rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:opacity .2s;margin-top:auto}
+.groq-tip{font-size:.77rem;color:var(--sky-deep);font-style:italic;background:rgba(135,206,235,.09);border-left:3px solid var(--sky);padding:5px 8px;border-radius:0 6px 6px 0}
+.btn-buy{width:100%;padding:10px;background:linear-gradient(135deg,var(--sky),var(--sky-deep));color:#fff;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:.98rem;font-weight:700;cursor:pointer;transition:opacity .2s;margin-top:auto}
 .btn-buy:hover{opacity:.88}
 .empty-pub{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)}
-.empty-pub h3{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;margin-bottom:8px;color:var(--text)}
+.empty-pub h3{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:8px;color:var(--text)}
 
-/* ── CARRITO ── */
-.cart-fab{position:fixed;bottom:26px;right:26px;background:linear-gradient(135deg,var(--sky),var(--sky-deep));color:#fff;border:none;border-radius:50%;width:56px;height:56px;font-size:1.4rem;cursor:pointer;box-shadow:0 4px 18px rgba(90,175,212,.45);display:none;align-items:center;justify-content:center;z-index:200;transition:transform .2s}
+/* CARRITO */
+.cart-fab{position:fixed;bottom:24px;right:24px;background:linear-gradient(135deg,var(--sky),var(--sky-deep));color:#fff;border:none;border-radius:50%;width:54px;height:54px;font-size:1.4rem;cursor:pointer;box-shadow:0 4px 18px rgba(90,175,212,.45);display:none;align-items:center;justify-content:center;z-index:300;transition:transform .2s}
 .cart-fab.on{display:flex}
 .cart-fab:hover{transform:scale(1.08)}
-.cart-cnt{position:absolute;top:-4px;right:-4px;background:var(--gold);color:#111;border-radius:50%;width:19px;height:19px;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.cart-cnt{position:absolute;top:-4px;right:-4px;background:var(--gold);color:#111;border-radius:50%;width:19px;height:19px;font-size:.66rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
 .overlay.open{display:flex}
-.modal{background:var(--card);border-radius:20px;width:100%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
-.modal-hd{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.35rem;font-weight:800;color:var(--text)}
-.modal-body{overflow-y:auto;flex:1;padding:14px 22px}
-.cart-item{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border)}
+.modal{background:var(--card);border-radius:20px;width:100%;max-width:450px;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+.modal-hd{padding:16px 20px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:800;color:var(--text)}
+.modal-body{overflow-y:auto;flex:1;padding:13px 20px}
+.cart-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
 .cart-item:last-child{border-bottom:none}
-.cart-item-name{font-weight:600;font-size:.92rem}
-.cart-item-price{color:var(--sky-deep);font-weight:700}
-.cart-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.cart-total-lbl{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700}
-.cart-total-amt{font-family:'Barlow Condensed',sans-serif;font-size:1.55rem;font-weight:900;color:var(--sky-deep)}
-.btn-wa{margin:0 22px 18px;padding:12px;background:#25D366;color:#fff;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.05em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s}
+.cart-item-name{font-weight:600;font-size:.9rem}
+.cart-item-price{color:var(--sky-deep);font-weight:700;font-size:.9rem}
+.cart-foot{padding:13px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.cart-total-lbl{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700}
+.cart-total-amt{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;color:var(--sky-deep)}
+.btn-wa{margin:0 20px 16px;padding:11px;background:#25D366;color:#fff;border:none;border-radius:9px;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .2s}
 .btn-wa:hover{opacity:.9}
 
-/* ── NOT FOUND ── */
-#scr-404{min-height:100vh;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:24px}
+/* 404 */
+#scr-404{display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:24px}
 #scr-404.on{display:flex}
 #scr-404 h2{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:90px;right:24px;background:#111;color:#fff;padding:11px 18px;border-radius:10px;font-size:.88rem;font-weight:500;z-index:400;opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s;pointer-events:none;max-width:270px}
+/* TOAST */
+.toast{position:fixed;bottom:86px;right:22px;background:#111;color:#fff;padding:10px 16px;border-radius:9px;font-size:.86rem;font-weight:500;z-index:500;opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s;pointer-events:none;max-width:260px}
 .toast.show{opacity:1;transform:translateY(0)}
 [data-theme=dark] .toast{background:#e6edf3;color:#111}
 
-/* ── FILE PICKER ── */
-.file-pick-wrap{display:flex;flex-direction:column;gap:8px}
-.file-pick-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed var(--sky-deep);border-radius:8px;background:var(--bg);cursor:pointer;color:var(--sky-deep);font-weight:600;font-size:.88rem;transition:background .2s;width:100%}
-.file-pick-btn:hover{background:rgba(135,206,235,.12)}
-.file-pick-btn input[type=file]{display:none}
-.img-preview{width:100%;max-height:160px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:none}
-.img-preview.on{display:block}
-.img-preview-sq{width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid var(--border);display:none}
-.img-preview-sq.on{display:block}
-.file-uploading{font-size:.8rem;color:var(--sky-deep);display:none}
-.file-uploading.on{display:block}
+/* MODAL LINK PERSONALIZADO */
+.credit-cost{font-size:.85rem;color:var(--muted);margin-top:8px}
+.credit-cost strong{color:var(--sky-deep)}
 
-@media(max-width:600px){
-  .login-box{padding:32px 18px 26px}
+@media(max-width:640px){
+  .navbar{padding:0 10px;gap:0}
+  .nav-btn span{display:none}
+  .nav-btn{padding:8px}
+  .screen{padding:16px 12px}
   .form-row{grid-template-columns:1fr}
-  .store-hero{flex-direction:column;align-items:flex-start;gap:14px}
-  #scr-owner{padding:20px 14px 80px}
+  .stores-grid{grid-template-columns:1fr 1fr}
+  .plans-grid{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
 <body>
 
 <!-- LOADING -->
-<div id="scr-loading" class="screen flex-on">
-  <img id="logo-loading" style="width:130px;height:auto" alt="Del_MER">
+<div id="scr-loading">
+  <img id="logo-loading" style="width:120px;height:auto" alt="Del_MER">
   <div class="spinner"></div>
 </div>
 
 <!-- LOGIN -->
-<div id="scr-login" class="screen flex-on" style="display:none">
+<div id="scr-login">
   <div class="login-box">
     <img id="logo-login" class="login-logo" alt="Del_MER">
-    <div>
-      <div class="login-title">Del_MER</div>
-      <div class="login-sub">Creá y gestioná tu tienda online</div>
-    </div>
+    <div><div class="login-title">Del_MER</div><div class="login-sub">Creá y gestioná tu tienda online</div></div>
     <div class="tabs">
       <button class="tab active" onclick="switchTab('login')">Iniciar sesión</button>
       <button class="tab" onclick="switchTab('register')">Registrarse</button>
     </div>
-    <div id="auth-err" class="msg-error"></div>
+    <div id="auth-err" class="msg-err"></div>
     <div id="auth-ok" class="msg-ok"></div>
     <input class="inp" type="email" id="inp-email" placeholder="Correo electrónico">
     <input class="inp" type="password" id="inp-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doAuth()">
@@ -224,164 +292,275 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
-<!-- NAVBAR (dueño) -->
-<nav id="navbar">
-  <img id="logo-nav" class="nav-logo" alt="Del_MER">
-  <div class="nav-right">
-    <button class="theme-btn" onclick="cycleTheme()"><span id="theme-icon">☀️</span><span id="theme-lbl">Auto</span></button>
-    <button class="btn-icon" title="Cerrar sesión" onclick="doLogout()">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+<!-- APP (panel dueño) -->
+<div id="app">
+  <nav class="navbar">
+    <div class="nav-brand">
+      <img id="logo-nav" class="nav-brand-logo" alt="DM" onclick="goTo('casa')">
+    </div>
+    <button class="nav-btn active" id="nb-tiendas" onclick="goTo('tiendas')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Tienda del usuario</span>
     </button>
-  </div>
-</nav>
-
-<!-- PANEL DUEÑO -->
-<div id="scr-owner" class="screen">
-
-  <!-- Mi tienda config -->
-  <div class="section-title">Mi tienda</div>
-
-  <div class="card">
-    <div class="card-title">🔗 Tu link público</div>
-    <div class="store-link-box">
-      <span class="store-link-url" id="store-link-url">Cargando...</span>
-      <button class="btn-copy" onclick="copyLink()">Copiar</button>
+    <button class="nav-btn" id="nb-casa" onclick="goTo('casa')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Casa</span>
+    </button>
+    <button class="nav-btn" id="nb-qr" onclick="goTo('qr')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><rect x="10" y="10" width="4" height="4"/><line x1="16" y1="10" x2="21" y2="10"/><line x1="21" y1="16" x2="16" y2="16"/><line x1="16" y1="21" x2="21" y2="21"/></svg>
+      <span>QR</span>
+    </button>
+    <button class="nav-btn" id="nb-suscripcion" onclick="goTo('suscripcion')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <span>Suscripcion</span>
+    </button>
+    <div class="nav-right">
+      <div class="credits-chip" id="credits-chip">⭐ <span id="credits-val">0</span></div>
+      <button class="theme-btn" onclick="cycleTheme()"><span id="theme-icon">☀️</span><span id="theme-lbl">Auto</span></button>
+      <button class="btn-icon" title="Cerrar sesión" onclick="doLogout()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
     </div>
-    <p style="font-size:.8rem;color:var(--muted)">Compartí este link con tus clientes para que vean tu tienda.</p>
-  </div>
+  </nav>
 
-  <div class="card">
-    <div class="card-title">⚙️ Configurar tienda</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Nombre de la tienda *</label>
-        <input class="inp" type="text" id="cfg-name" placeholder="Ej: Ropa de Caro">
-      </div>
-      <div class="form-group">
-        <label>WhatsApp (con código país)</label>
-        <input class="inp" type="text" id="cfg-wa" placeholder="5491155557777">
-      </div>
+  <!-- CASA -->
+  <div class="screen" id="sc-casa">
+    <div class="sec-title">🏠 Casa</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">🏪</div><div class="stat-lbl">Mis tiendas</div><div class="stat-val" id="st-tiendas">0</div></div>
+      <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-lbl">Productos</div><div class="stat-val" id="st-productos">0</div></div>
+      <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-lbl">Créditos</div><div class="stat-val" id="st-creditos">0</div></div>
+      <div class="stat-card"><div class="stat-icon">👑</div><div class="stat-lbl">Plan</div><div class="stat-val" id="st-plan" style="font-size:1.2rem">—</div></div>
     </div>
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Descripción / eslogan</label>
-      <input class="inp" type="text" id="cfg-desc" placeholder="La mejor ropa de la zona">
-    </div>
-    <div class="form-group" style="margin-bottom:16px">
-      <label>Logo de tu tienda (opcional)</label>
-      <div class="file-pick-wrap">
-        <label class="file-pick-btn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          Elegir imagen
-          <input type="file" id="cfg-logo-file" accept="image/*" onchange="previewImg(this,'cfg-logo-preview-sq')">
-        </label>
-        <div style="display:flex;align-items:center;gap:10px">
-          <img id="cfg-logo-preview-sq" class="img-preview-sq" alt="preview logo">
-          <span class="file-uploading" id="cfg-logo-uploading">⏳ Subiendo...</span>
-        </div>
-        <input type="hidden" id="cfg-logo">
+    <div class="card">
+      <div class="card-title">Acceso rápido</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-save" onclick="goTo('tiendas')">🏪 Mis tiendas</button>
+        <button class="btn-sm" onclick="goTo('qr')">📱 Generar QR</button>
+        <button class="btn-sm" onclick="goTo('suscripcion')">👑 Ver planes</button>
       </div>
     </div>
-    <button class="btn-save" onclick="saveStoreConfig()">💾 Guardar configuración</button>
   </div>
 
-  <!-- Productos -->
-  <div class="section-title" style="margin-top:8px">Mis productos</div>
+  <!-- TIENDAS LIST -->
+  <div class="screen" id="sc-tiendas">
+    <div class="sec-title">🏪 Mis tiendas</div>
+    <div class="stores-grid" id="stores-grid">
+      <div style="text-align:center;padding:28px;color:var(--muted);grid-column:1/-1"><div class="spinner" style="margin:0 auto 12px"></div>Cargando...</div>
+    </div>
+    <button class="btn-new-store" onclick="newStore()">+ Nueva tienda</button>
+  </div>
 
-  <!-- Form nuevo/editar -->
-  <div class="card" id="prod-form-card">
-    <div class="card-title" id="prod-form-title">➕ Nuevo producto</div>
-    <input type="hidden" id="edit-id">
-    <div class="form-row">
-      <div class="form-group">
-        <label>Nombre *</label>
-        <input class="inp" type="text" id="p-name" placeholder="Ej: Remera básica">
+  <!-- EDITOR TIENDA -->
+  <div class="screen" id="sc-editor">
+    <button class="back-btn" onclick="goTo('tiendas')">← Volver a mis tiendas</button>
+    <div class="sec-title" id="editor-title">Configurar tienda</div>
+
+    <!-- Config tienda -->
+    <div class="card">
+      <div class="card-title">⚙️ Datos de la tienda</div>
+      <input type="hidden" id="edit-store-id">
+      <div class="form-row">
+        <div class="form-group"><label>Nombre *</label><input class="inp" type="text" id="cfg-name" placeholder="Ej: Ropa de Caro"></div>
+        <div class="form-group"><label>WhatsApp (con código país)</label><input class="inp" type="text" id="cfg-wa" placeholder="5491155557777"></div>
       </div>
+      <div class="form-group"><label>Descripción / eslogan</label><input class="inp" type="text" id="cfg-desc" placeholder="La mejor ropa de la zona"></div>
       <div class="form-group">
-        <label>Precio ($) *</label>
-        <input class="inp" type="number" id="p-price" min="0" placeholder="5000">
-      </div>
-    </div>
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Descripción</label>
-      <textarea class="inp" id="p-desc" placeholder="Descripción del producto..."></textarea>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Imagen del producto (opcional)</label>
+        <label>Logo de la tienda</label>
         <div class="file-pick-wrap">
           <label class="file-pick-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             Elegir imagen
-            <input type="file" id="p-img-file" accept="image/*" onchange="previewImg(this,'p-img-preview')">
+            <input type="file" id="cfg-logo-file" accept="image/*" onchange="pickImg(this,'cfg-logo-prev-sq','cfg-logo','cfg-logo-status')">
           </label>
-          <img id="p-img-preview" class="img-preview" alt="preview producto">
-          <span class="file-uploading" id="p-img-uploading">⏳ Subiendo...</span>
-          <input type="hidden" id="p-img">
+          <div style="display:flex;align-items:center;gap:10px">
+            <img id="cfg-logo-prev-sq" class="img-preview-sq" alt="">
+            <span class="upload-status" id="cfg-logo-status">⏳ Subiendo...</span>
+          </div>
+          <input type="hidden" id="cfg-logo">
         </div>
       </div>
-      <div class="form-group">
-        <label>Emoji (si no hay imagen)</label>
-        <input class="inp" type="text" id="p-emoji" placeholder="📦" maxlength="4">
+
+      <!-- Link personalizado -->
+      <div class="card-title" style="margin-top:4px">🔗 Link de tu tienda</div>
+      <div class="store-link-box">
+        <span class="store-link-url" id="store-link-url">—</span>
+        <button class="btn-copy" onclick="copyLink()">Copiar</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn-sm" onclick="openCustomLink()">✨ Link personalizado <span class="cost-chip" style="margin-left:4px">100 ⭐</span></button>
+        <button class="btn-sm" onclick="publishStore()">🚀 Publicar tienda <span class="cost-chip" style="margin-left:4px">10 ⭐</span></button>
+      </div>
+      <button class="btn-save" onclick="saveStoreConfig()">💾 Guardar configuración</button>
+    </div>
+
+    <!-- Nuevo producto -->
+    <div class="card">
+      <div class="card-title" id="prod-form-title">➕ Nuevo producto</div>
+      <input type="hidden" id="edit-prod-id">
+      <div class="form-row">
+        <div class="form-group"><label>Nombre *</label><input class="inp" type="text" id="p-name" placeholder="Ej: Remera básica"></div>
+        <div class="form-group"><label>Precio ($) *</label><input class="inp" type="number" id="p-price" min="0" placeholder="5000"></div>
+      </div>
+      <div class="form-group"><label>Descripción</label><textarea class="inp" id="p-desc" placeholder="Descripción del producto..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Imagen del producto</label>
+          <div class="file-pick-wrap">
+            <label class="file-pick-btn">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Elegir imagen
+              <input type="file" id="p-img-file" accept="image/*" onchange="pickImg(this,'p-img-prev','p-img','p-img-status')">
+            </label>
+            <img id="p-img-prev" class="img-preview" alt="">
+            <span class="upload-status" id="p-img-status">⏳ Subiendo...</span>
+            <input type="hidden" id="p-img">
+          </div>
+        </div>
+        <div class="form-group"><label>Emoji (si no hay imagen)</label><input class="inp" type="text" id="p-emoji" placeholder="📦" maxlength="4"></div>
+      </div>
+      <div class="checkbox-row" onclick="document.getElementById('p-multi').checked=!document.getElementById('p-multi').checked">
+        <input type="checkbox" id="p-multi"><label>⭐ Este producto puede ser comprado por varias personas</label>
+      </div>
+      <div class="checkbox-row" onclick="document.getElementById('p-visible').checked=!document.getElementById('p-visible').checked">
+        <input type="checkbox" id="p-visible" checked><label>👁 Visible en la tienda</label>
+      </div>
+      <div class="groq-box">
+        <div style="font-weight:700;font-size:.9rem;color:var(--sky-deep)">🤖 Mensaje IA para clientes</div>
+        <p style="font-size:.78rem;color:var(--muted)">Completá nombre, precio y multi-compra. El bot genera un mensaje atractivo.</p>
+        <button class="btn-groq" onclick="askGroq()">✨ Generar mensaje</button>
+        <div class="groq-out" id="groq-out">El mensaje aparecerá acá...</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-save" onclick="saveProduct()">💾 Guardar producto</button>
+        <button class="btn-sm" onclick="resetProdForm()">Cancelar</button>
       </div>
     </div>
-    <div class="checkbox-row" onclick="document.getElementById('p-multi').checked=!document.getElementById('p-multi').checked">
-      <input type="checkbox" id="p-multi">
-      <label for="p-multi">⭐ Este producto puede ser comprado por varias personas</label>
-    </div>
-    <div class="checkbox-row" onclick="document.getElementById('p-visible').checked=!document.getElementById('p-visible').checked">
-      <input type="checkbox" id="p-visible" checked>
-      <label for="p-visible">👁 Visible en mi tienda</label>
-    </div>
-    <!-- Groq -->
-    <div class="groq-box">
-      <div style="font-weight:700;font-size:.93rem;color:var(--sky-deep)">🤖 Sugerencia IA para tus clientes</div>
-      <p style="font-size:.8rem;color:var(--muted)">Completá nombre, precio y si es multi-compra. El bot genera un mensaje atractivo para mostrar en la tienda.</p>
-      <button class="btn-groq" onclick="askGroq()">✨ Generar mensaje</button>
-      <div class="groq-out" id="groq-out">El mensaje del bot aparecerá acá...</div>
-    </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn-save" onclick="saveProduct()">💾 Guardar producto</button>
-      <button class="btn-sm" onclick="resetProdForm()">Cancelar</button>
+
+    <!-- Lista productos -->
+    <div class="card">
+      <div class="card-title">📦 Productos de esta tienda</div>
+      <div style="overflow-x:auto">
+        <table class="prod-table">
+          <thead><tr><th>Nombre</th><th>Precio</th><th>Multi</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="prod-list"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- Lista productos -->
-  <div class="card">
-    <div class="card-title">📦 Mis productos</div>
-    <div style="overflow-x:auto">
-      <table class="prod-table">
-        <thead><tr>
-          <th>Nombre</th><th>Precio</th><th>Multi</th><th>Estado</th><th>Acciones</th>
-        </tr></thead>
-        <tbody id="owner-products-list">
-          <tr><td colspan="5" style="text-align:center;padding:28px;color:var(--muted)">Cargando...</td></tr>
-        </tbody>
-      </table>
+  <!-- QR -->
+  <div class="screen" id="sc-qr">
+    <div class="sec-title">📱 Generar QR</div>
+    <div class="card">
+      <div class="card-title">1. Elegí la tienda</div>
+      <div class="qr-stores-grid" id="qr-stores-grid">
+        <div style="color:var(--muted);font-size:.88rem">Cargando tiendas...</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">2. Logo en el centro del QR</div>
+      <div class="qr-logo-opts">
+        <div class="qr-logo-opt selected" id="qr-opt-delmer" onclick="selectQrLogo('delmer')">
+          <img id="qr-logo-delmer-preview" alt="Del_MER" style="border-radius:8px">
+          <span>Logo Del_MER</span>
+        </div>
+        <div class="qr-logo-opt" id="qr-opt-tienda" onclick="selectQrLogo('tienda')">
+          <div id="qr-logo-tienda-ph" style="width:50px;height:50px;border-radius:8px;background:linear-gradient(135deg,var(--sky),var(--sky-deep));display:flex;align-items:center;justify-content:center;font-size:1.4rem">🏪</div>
+          <img id="qr-logo-tienda-img" style="width:50px;height:50px;border-radius:8px;display:none" alt="">
+          <span>Logo de tu tienda</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">3. Vista previa</div>
+      <div class="qr-canvas-wrap">
+        <canvas id="qr-canvas" width="250" height="250"></canvas>
+      </div>
+      <div style="text-align:center;margin-bottom:14px">
+        <span class="cost-chip">Costo: 20 ⭐</span>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-save" onclick="generateAndDownloadQR()">⬇️ Descargar QR (20 ⭐)</button>
+        <button class="btn-sm" onclick="previewQR()">👁 Vista previa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUSCRIPCION -->
+  <div class="screen" id="sc-suscripcion">
+    <div class="sec-title">👑 Suscripción</div>
+    <div class="card" style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="card-title" style="margin-bottom:4px">Tu plan actual</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;color:var(--sky-deep)" id="current-plan-name">Gratuit</div>
+          <div style="font-size:.84rem;color:var(--muted)" id="current-plan-credits">2 créditos por semana</div>
+        </div>
+        <div class="credits-chip" style="font-size:1rem;padding:8px 16px">⭐ <span id="current-credits-big">0</span> créditos</div>
+      </div>
+    </div>
+    <div class="plans-grid">
+      <div class="plan-card" id="plan-gratuit" onclick="selectPlan('gratuit')">
+        <div class="plan-name">Gratuit</div>
+        <div class="plan-price">$0<span>/mes</span></div>
+        <div class="plan-credits">⭐ 2 créditos / semana</div>
+        <button class="btn-plan current" id="btn-plan-gratuit">Plan actual</button>
+      </div>
+      <div class="plan-card" id="plan-cheap" onclick="selectPlan('cheap')">
+        <div class="plan-name">Cheap</div>
+        <div class="plan-price">$10<span>/mes</span></div>
+        <div class="plan-credits">⭐ 10 créditos / semana</div>
+        <button class="btn-plan" id="btn-plan-cheap">Suscribirse</button>
+      </div>
+      <div class="plan-card" id="plan-plus" onclick="selectPlan('plus')">
+        <div class="plan-name">Plus</div>
+        <div class="plan-price">$100<span>/mes</span></div>
+        <div class="plan-credits">⭐ 50 créditos / semana</div>
+        <button class="btn-plan" id="btn-plan-plus">Suscribirse</button>
+      </div>
+      <div class="plan-card" id="plan-maximus" onclick="selectPlan('maximus')">
+        <div class="plan-name">Maximus</div>
+        <div class="plan-price">$300<span>/mes</span></div>
+        <div class="plan-credits">⭐ 150 créditos / semana</div>
+        <button class="btn-plan" id="btn-plan-maximus">Suscribirse</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">¿Cómo usar los créditos?</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:var(--muted)">
+        <div>🚀 <strong>Publicar tienda</strong> — 10 créditos</div>
+        <div>📱 <strong>Generar QR</strong> — 20 créditos</div>
+        <div>✨ <strong>Link personalizado</strong> — 100 créditos</div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- TIENDA PÚBLICA -->
-<div id="scr-store" class="screen">
-  <div class="store-hero">
-    <div id="pub-logo-ph" class="store-hero-logo-placeholder">🏪</div>
-    <img id="pub-logo-img" class="store-hero-logo" style="display:none" alt="">
-    <div class="store-hero-info">
-      <div class="store-name-pub" id="pub-store-name">Cargando...</div>
-      <div class="store-desc-pub" id="pub-store-desc"></div>
-      <div class="store-powered">Tienda creada con <a href="?" target="_blank">Del_MER</a></div>
+<div id="scr-public">
+  <nav class="pub-navbar">
+    <div class="pub-store-info">
+      <div id="pub-logo-ph" class="pub-logo-ph">🏪</div>
+      <img id="pub-logo-img" class="pub-logo" style="display:none" alt="">
+      <div>
+        <div class="pub-store-name" id="pub-store-name">Cargando...</div>
+        <div class="pub-store-desc" id="pub-store-desc"></div>
+        <div class="pub-powered">Creado con <a href="?" target="_blank">Del_MER</a></div>
+      </div>
     </div>
-  </div>
+    <button class="theme-btn" onclick="cycleTheme()"><span id="pub-theme-icon">☀️</span></button>
+  </nav>
   <div class="pub-grid" id="pub-grid">
-    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><div class="spinner" style="margin:0 auto 14px"></div>Cargando...</div>
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><div class="spinner" style="margin:0 auto 12px"></div>Cargando...</div>
   </div>
 </div>
 
 <!-- 404 -->
-<div id="scr-404" class="screen">
-  <img id="logo-404" style="width:120px;height:auto;opacity:.5" alt="">
+<div id="scr-404">
+  <img id="logo-404" style="width:110px;height:auto;opacity:.45" alt="">
   <h2>Tienda no encontrada</h2>
-  <p style="color:var(--muted)">El link que ingresaste no corresponde a ninguna tienda activa.</p>
+  <p style="color:var(--muted)">El link no corresponde a ninguna tienda activa.</p>
   <a href="?" style="color:var(--sky-deep);font-weight:600;text-decoration:none">Ir a Del_MER →</a>
 </div>
 
@@ -390,22 +569,35 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   🛒 <span class="cart-cnt" id="cart-cnt">0</span>
 </button>
 
-<!-- CARRITO MODAL -->
+<!-- MODAL CARRITO -->
 <div class="overlay" id="cart-overlay">
   <div class="modal">
-    <div class="modal-hd">
-      <div class="modal-title">🛒 Tu carrito</div>
-      <button class="btn-icon" onclick="closeCart()">✕</button>
-    </div>
+    <div class="modal-hd"><div class="modal-title">🛒 Tu carrito</div><button class="btn-icon" onclick="closeCart()">✕</button></div>
     <div class="modal-body" id="cart-list"></div>
-    <div class="cart-foot">
-      <span class="cart-total-lbl">Total</span>
-      <span class="cart-total-amt" id="cart-total">$0</span>
-    </div>
+    <div class="cart-foot"><span class="cart-total-lbl">Total</span><span class="cart-total-amt" id="cart-total">$0</span></div>
     <button class="btn-wa" onclick="doCheckout()">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M13.507.036C6.649.036 1.064 5.619 1.064 12.478c0 2.192.573 4.33 1.658 6.215L.139 23.78l5.246-1.554a11.43 11.43 0 0 0 8.116 3.261c6.857 0 12.44-5.583 12.44-12.44C25.941 6.192 20.36.036 13.507.036zm0 22.758a10.31 10.31 0 0 1-5.247-1.428l-.375-.224-3.895 1.023.979-3.795-.241-.394a10.316 10.316 0 0 1-1.583-5.498c0-5.7 4.638-10.337 10.362-10.337 5.721 0 10.362 4.637 10.362 10.337 0 5.699-4.641 10.316-10.362 10.316z"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M13.507.036C6.649.036 1.064 5.619 1.064 12.478c0 2.192.573 4.33 1.658 6.215L.139 23.78l5.246-1.554a11.43 11.43 0 0 0 8.116 3.261c6.857 0 12.44-5.583 12.44-12.44C25.941 6.192 20.36.036 13.507.036zm0 22.758a10.31 10.31 0 0 1-5.247-1.428l-.375-.224-3.895 1.023.979-3.795-.241-.394a10.316 10.316 0 0 1-1.583-5.498c0-5.7 4.638-10.337 10.362-10.337 5.721 0 10.362 4.637 10.362 10.337 0 5.699-4.641 10.316-10.362 10.316z"/></svg>
       Consultar por WhatsApp
     </button>
+  </div>
+</div>
+
+<!-- MODAL LINK PERSONALIZADO -->
+<div class="overlay" id="custom-link-overlay">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">✨ Link personalizado</div><button class="btn-icon" onclick="document.getElementById('custom-link-overlay').classList.remove('open')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:.88rem;color:var(--muted);margin-bottom:14px">Cambiá tu link de <code>?tienda=ID</code> a <code>/nombre-de-tu-tienda</code>. También cambia el favicon y el título del navegador al logo y nombre de tu tienda.</p>
+      <div class="form-group">
+        <label>Nombre para la URL (sin espacios ni caracteres especiales)</label>
+        <input class="inp" type="text" id="custom-slug" placeholder="mi-tienda" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'')">
+      </div>
+      <p class="credit-cost">Esta operación cuesta <strong>100 créditos ⭐</strong></p>
+    </div>
+    <div style="padding:0 20px 16px;display:flex;gap:10px">
+      <button class="btn-save" onclick="saveCustomLink()">Confirmar (100 ⭐)</button>
+      <button class="btn-sm" onclick="document.getElementById('custom-link-overlay').classList.remove('open')">Cancelar</button>
+    </div>
   </div>
 </div>
 
@@ -424,7 +616,7 @@ const sb = createClient(SB_URL, SB_KEY);
 // ── LOGO ──
 function setLogos() {
   const src = 'data:image/png;base64,' + LOGO_B64;
-  ['logo-loading','logo-login','logo-nav','logo-404'].forEach(id => {
+  ['logo-loading','logo-login','logo-nav','logo-404','qr-logo-delmer-preview'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.src = src;
   });
@@ -436,10 +628,12 @@ function applyTheme() {
   const h = new Date().getHours();
   const dark = themeMode==='dark' ? true : themeMode==='light' ? false : (h>=20||h<6);
   document.body.setAttribute('data-theme', dark?'dark':'light');
-  const icon = document.getElementById('theme-icon');
+  ['theme-icon','pub-theme-icon'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = dark?'🌙':'☀️';
+  });
   const lbl = document.getElementById('theme-lbl');
-  if(icon) icon.textContent = dark?'🌙':'☀️';
-  if(lbl) lbl.textContent = themeMode==='auto'?'Auto':themeMode==='dark'?'Oscuro':'Claro';
+  if (lbl) lbl.textContent = themeMode==='auto'?'Auto':themeMode==='dark'?'Oscuro':'Claro';
 }
 function cycleTheme() {
   const modes=['auto','light','dark'];
@@ -454,7 +648,7 @@ setInterval(applyTheme, 60000);
 let currentTab = 'login';
 function switchTab(t) {
   currentTab = t;
-  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===(t==='login'?0:1)));
+  document.querySelectorAll('.tab').forEach((b,i) => b.classList.toggle('active', i===(t==='login'?0:1)));
   document.getElementById('inp-name').style.display = t==='register'?'block':'none';
   document.getElementById('btn-auth').textContent = t==='register'?'Crear cuenta':'Entrar';
   clearMsgs();
@@ -469,17 +663,17 @@ async function doAuth() {
   const email = document.getElementById('inp-email').value.trim();
   const pass = document.getElementById('inp-pass').value;
   if(!email||!pass){showErr('Completá email y contraseña.');return;}
-  const rc = typeof grecaptcha!=='undefined' ? grecaptcha.getResponse() : 'skip';
+  const rc = typeof grecaptcha!=='undefined'?grecaptcha.getResponse():'skip';
   if(!rc){showErr('Completá el reCAPTCHA.');return;}
   if(currentTab==='register'){
     const name = document.getElementById('inp-name').value.trim();
     const {error} = await sb.auth.signUp({email,password:pass,options:{data:{full_name:name}}});
     if(error){showErr(error.message);return;}
-    showOk('¡Cuenta creada! Revisá tu email para confirmar.');
+    showOk('¡Cuenta creada! Ya podés iniciar sesión.');
   } else {
     const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
     if(error){showErr('Email o contraseña incorrectos.');return;}
-    await loadOwnerPanel(data.user);
+    await enterApp(data.user);
   }
 }
 async function loginGoogle() {
@@ -491,95 +685,213 @@ async function doLogout() {
   location.reload();
 }
 
-// ── SCREEN HELPERS ──
-function showScreen(id) {
-  ['scr-loading','scr-login','scr-owner','scr-store','scr-404'].forEach(s=>{
-    const el=document.getElementById(s);
-    if(!el) return;
-    el.style.display='none';
-    el.classList.remove('on','flex-on');
-  });
-  const target = document.getElementById(id);
-  if(!target) return;
-  if(id==='scr-loading'||id==='scr-login'||id==='scr-404') {
-    target.style.display='flex';
-    target.classList.add('flex-on');
-  } else {
-    target.style.display='block';
-    target.classList.add('on');
-  }
+// ── STATE ──
+let currentUser = null;
+let myStores = [];
+let currentStoreId = null;
+let userCredits = 0;
+let userPlan = 'gratuit';
+
+// ── ENTER APP ──
+async function enterApp(user) {
+  currentUser = user;
+  document.getElementById('scr-login').classList.remove('on');
+  document.getElementById('app').classList.add('on');
+  document.getElementById('scr-loading').classList.add('off');
+  await loadUserData();
+  goTo('tiendas');
 }
 
-// ── OWNER PANEL ──
-let currentUser = null;
-let currentStore = null;
-
-async function loadOwnerPanel(user) {
-  currentUser = user;
-  showScreen('scr-owner');
-  document.getElementById('navbar').classList.add('on');
-  document.getElementById('cart-fab').classList.remove('on');
-
-  // Buscar o crear tienda
-  let {data:store} = await sb.from('delmer_stores').select('*').eq('user_id', user.id).single();
-  if(!store) {
-    // Crear tienda nueva
-    const {data:newStore} = await sb.from('delmer_stores').insert([{
-      user_id: user.id,
-      name: user.user_metadata?.full_name ? user.user_metadata.full_name + "'s Tienda" : 'Mi Tienda',
-      active: true
-    }]).select().single();
-    store = newStore;
+async function loadUserData() {
+  // Créditos y plan
+  let {data:cred} = await sb.from('delmer_credits').select('*').eq('user_id', currentUser.id).single();
+  if(!cred) {
+    await sb.from('delmer_credits').insert([{user_id:currentUser.id, credits:0, plan:'gratuit'}]);
+    cred = {credits:0, plan:'gratuit'};
   }
-  currentStore = store;
+  userCredits = cred.credits || 0;
+  userPlan = cred.plan || 'gratuit';
+  document.getElementById('credits-val').textContent = userCredits;
+  document.getElementById('current-credits-big').textContent = userCredits;
+  document.getElementById('st-creditos').textContent = userCredits;
+  document.getElementById('st-plan').textContent = capitalize(userPlan);
+  document.getElementById('current-plan-name').textContent = capitalize(userPlan);
+  const planCredits = {gratuit:'2',cheap:'10',plus:'50',maximus:'150'};
+  document.getElementById('current-plan-credits').textContent = (planCredits[userPlan]||'2') + ' créditos por semana';
 
-  // Mostrar link
-  const baseUrl = window.location.href.split('?')[0];
-  document.getElementById('store-link-url').textContent = `${baseUrl}?tienda=${store.id}`;
+  // Tiendas
+  const {data:stores} = await sb.from('delmer_stores').select('*').eq('user_id', currentUser.id).order('created_at',{ascending:true});
+  myStores = stores || [];
+  document.getElementById('st-tiendas').textContent = myStores.length;
 
-  // Llenar form config
-  document.getElementById('cfg-name').value = store.name || '';
-  document.getElementById('cfg-wa').value = store.whatsapp || '';
-  document.getElementById('cfg-desc').value = store.description || '';
-  document.getElementById('cfg-logo').value = store.logo_url || '';
-  const logoPreview = document.getElementById('cfg-logo-preview-sq');
-  if(store.logo_url){ logoPreview.src=store.logo_url; logoPreview.classList.add('on'); }
-  else { logoPreview.src=''; logoPreview.classList.remove('on'); }
+  // Productos total
+  if(myStores.length) {
+    const ids = myStores.map(s=>s.id);
+    const {data:prods} = await sb.from('delmer_products').select('id').in('store_id', ids);
+    document.getElementById('st-productos').textContent = prods?.length || 0;
+  }
+  updatePlanUI();
+}
 
-  loadOwnerProducts();
+function capitalize(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
+
+// ── NAV ──
+function goTo(section) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sc-'+section)?.classList.add('on');
+  const nb = document.getElementById('nb-'+section);
+  if(nb) nb.classList.add('active');
+  if(section==='tiendas') renderStores();
+  if(section==='qr') renderQrStores();
+  if(section==='suscripcion') renderSuscripcion();
+}
+
+// ── TIENDAS ──
+function renderStores() {
+  const grid = document.getElementById('stores-grid');
+  if(!myStores.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted)">No tenés tiendas todavía. ¡Creá tu primera!</div>';
+    return;
+  }
+  grid.innerHTML = myStores.map(s => `
+    <div class="store-card" onclick="openEditor(${s.id})">
+      ${s.logo_url
+        ? `<img class="store-card-logo" src="${s.logo_url}" alt="">`
+        : `<div class="store-card-logo-ph">🏪</div>`}
+      <div class="store-card-name">${s.name}</div>
+      ${s.description?`<div class="store-card-desc">${s.description}</div>`:''}
+      <div class="store-card-badges">
+        <span class="badge ${s.active?'badge-on':'badge-off'}">${s.active?'Activa':'Inactiva'}</span>
+        ${s.custom_slug?`<span class="badge badge-credits">/${s.custom_slug}</span>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function newStore() {
+  const {data,error} = await sb.from('delmer_stores').insert([{
+    user_id: currentUser.id,
+    name: 'Mi nueva tienda',
+    active: false
+  }]).select().single();
+  if(error){toast('❌ Error: '+error.message);return;}
+  myStores.push(data);
+  openEditor(data.id);
+}
+
+function openEditor(storeId) {
+  currentStoreId = storeId;
+  const store = myStores.find(s=>s.id===storeId);
+  if(!store) return;
+  document.getElementById('editor-title').textContent = '⚙️ ' + store.name;
+  document.getElementById('edit-store-id').value = storeId;
+  document.getElementById('cfg-name').value = store.name||'';
+  document.getElementById('cfg-wa').value = store.whatsapp||'';
+  document.getElementById('cfg-desc').value = store.description||'';
+  document.getElementById('cfg-logo').value = store.logo_url||'';
+  const logoPreview = document.getElementById('cfg-logo-prev-sq');
+  if(store.logo_url){logoPreview.src=store.logo_url;logoPreview.classList.add('on');}
+  else{logoPreview.src='';logoPreview.classList.remove('on');}
+  // Link
+  const baseUrl = window.location.href.split('?')[0].replace(/#.*/,'');
+  const link = store.custom_slug
+    ? baseUrl.replace(/\/[^/]*$/, '/') + store.custom_slug
+    : `${baseUrl}?tienda=${store.id}`;
+  document.getElementById('store-link-url').textContent = link;
+  resetProdForm();
+  loadStoreProdList(storeId);
+  goTo('editor');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('nb-tiendas').classList.add('active');
 }
 
 async function saveStoreConfig() {
-  if(!currentStore) return;
+  const id = currentStoreId;
   const name = document.getElementById('cfg-name').value.trim();
-  if(!name){ toast('⚠️ El nombre es obligatorio'); return; }
+  if(!name){toast('⚠️ El nombre es obligatorio');return;}
   const {error} = await sb.from('delmer_stores').update({
     name,
     whatsapp: document.getElementById('cfg-wa').value.trim(),
     description: document.getElementById('cfg-desc').value.trim(),
-    logo_url: document.getElementById('cfg-logo').value.trim() || null
-  }).eq('id', currentStore.id);
-  if(error){ toast('❌ Error: '+error.message); return; }
-  currentStore.name = name;
+    logo_url: document.getElementById('cfg-logo').value||null
+  }).eq('id',id);
+  if(error){toast('❌ '+error.message);return;}
+  const idx = myStores.findIndex(s=>s.id===id);
+  if(idx>-1){
+    myStores[idx].name=name;
+    myStores[idx].whatsapp=document.getElementById('cfg-wa').value.trim();
+    myStores[idx].description=document.getElementById('cfg-desc').value.trim();
+    myStores[idx].logo_url=document.getElementById('cfg-logo').value||null;
+  }
+  document.getElementById('editor-title').textContent='⚙️ '+name;
   toast('✅ Configuración guardada');
 }
 
-async function loadOwnerProducts() {
-  if(!currentStore) return;
-  const tbody = document.getElementById('owner-products-list');
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">Cargando...</td></tr>';
-  const {data} = await sb.from('delmer_products').select('*').eq('store_id', currentStore.id).order('created_at',{ascending:false});
-  if(!data||!data.length){
-    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--muted)">Todavía no cargaste productos.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = data.map(p=>`
+async function publishStore() {
+  if(userCredits < 10){toast('⚠️ Necesitás al menos 10 créditos para publicar');return;}
+  if(!confirm('¿Publicar esta tienda? Cuesta 10 créditos.')) return;
+  await sb.from('delmer_stores').update({active:true}).eq('id',currentStoreId);
+  await spendCredits(10,'Publicar tienda');
+  const idx = myStores.findIndex(s=>s.id===currentStoreId);
+  if(idx>-1) myStores[idx].active=true;
+  toast('🚀 ¡Tienda publicada!');
+}
+
+// ── LINK PERSONALIZADO ──
+function openCustomLink() {
+  if(userCredits < 100){toast('⚠️ Necesitás 100 créditos para el link personalizado');return;}
+  const store = myStores.find(s=>s.id===currentStoreId);
+  document.getElementById('custom-slug').value = store?.custom_slug||'';
+  document.getElementById('custom-link-overlay').classList.add('open');
+}
+
+async function saveCustomLink() {
+  const slug = document.getElementById('custom-slug').value.trim();
+  if(!slug){toast('⚠️ Ingresá un nombre para la URL');return;}
+  if(userCredits < 100){toast('⚠️ No tenés suficientes créditos');return;}
+  // Verificar que el slug no esté tomado
+  const {data:existing} = await sb.from('delmer_stores').select('id').eq('custom_slug',slug).neq('id',currentStoreId);
+  if(existing&&existing.length){toast('❌ Ese nombre ya está en uso');return;}
+  await sb.from('delmer_stores').update({custom_slug:slug}).eq('id',currentStoreId);
+  await spendCredits(100,'Link personalizado');
+  const idx = myStores.findIndex(s=>s.id===currentStoreId);
+  if(idx>-1) myStores[idx].custom_slug=slug;
+  // Actualizar link mostrado
+  const baseUrl = window.location.href.split('?')[0].replace(/#.*/,'');
+  document.getElementById('store-link-url').textContent = baseUrl.replace(/\/[^/]*$/, '/') + slug;
+  document.getElementById('custom-link-overlay').classList.remove('open');
+  toast('✅ Link personalizado guardado!');
+}
+
+function copyLink() {
+  const url = document.getElementById('store-link-url').textContent;
+  navigator.clipboard.writeText(url).then(()=>toast('📋 Link copiado!'));
+}
+
+// ── CRÉDITOS ──
+async function spendCredits(amount, reason) {
+  userCredits -= amount;
+  if(userCredits < 0) userCredits = 0;
+  await sb.from('delmer_credits').update({credits: userCredits}).eq('user_id', currentUser.id);
+  document.getElementById('credits-val').textContent = userCredits;
+  document.getElementById('current-credits-big').textContent = userCredits;
+  document.getElementById('st-creditos').textContent = userCredits;
+}
+
+// ── PRODUCTOS ──
+async function loadStoreProdList(storeId) {
+  const tbody = document.getElementById('prod-list');
+  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">Cargando...</td></tr>';
+  const {data} = await sb.from('delmer_products').select('*').eq('store_id',storeId).order('created_at',{ascending:false});
+  if(!data||!data.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Todavía no cargaste productos.</td></tr>';return;}
+  tbody.innerHTML=data.map(p=>`
     <tr>
       <td><strong>${p.name}</strong></td>
       <td>$${Number(p.price).toLocaleString('es-AR')}</td>
       <td>${p.multi_buyer?'⭐':'—'}</td>
       <td><span class="badge ${p.visible?'badge-on':'badge-off'}">${p.visible?'Visible':'Oculto'}</span></td>
-      <td style="display:flex;gap:6px;flex-wrap:wrap">
+      <td style="display:flex;gap:5px;flex-wrap:wrap">
         <button class="btn-sm" onclick="editProduct(${p.id})">✏️</button>
         <button class="btn-sm" onclick="toggleVis(${p.id},${!p.visible})">${p.visible?'Ocultar':'Mostrar'}</button>
         <button class="btn-danger" onclick="delProduct(${p.id})">🗑</button>
@@ -590,69 +902,64 @@ async function loadOwnerProducts() {
 
 async function toggleVis(id,val){
   await sb.from('delmer_products').update({visible:val}).eq('id',id);
-  loadOwnerProducts();
+  loadStoreProdList(currentStoreId);
   toast(val?'✅ Visible':'🙈 Ocultado');
 }
-
 async function delProduct(id){
   if(!confirm('¿Eliminar este producto?')) return;
   await sb.from('delmer_products').delete().eq('id',id);
-  loadOwnerProducts();
+  loadStoreProdList(currentStoreId);
   toast('🗑 Eliminado');
 }
-
 async function editProduct(id){
   const {data} = await sb.from('delmer_products').select('*').eq('id',id).single();
   if(!data) return;
-  document.getElementById('edit-id').value=data.id;
+  document.getElementById('edit-prod-id').value=data.id;
   document.getElementById('p-name').value=data.name||'';
   document.getElementById('p-price').value=data.price||'';
   document.getElementById('p-desc').value=data.description||'';
   document.getElementById('p-img').value=data.image_url||'';
-  const prevEl = document.getElementById('p-img-preview');
-  if(data.image_url){ prevEl.src=data.image_url; prevEl.classList.add('on'); }
-  else { prevEl.src=''; prevEl.classList.remove('on'); }
   document.getElementById('p-emoji').value=data.emoji||'';
   document.getElementById('p-multi').checked=!!data.multi_buyer;
   document.getElementById('p-visible').checked=!!data.visible;
-  document.getElementById('groq-out').textContent=data.groq_tip||'El mensaje del bot aparecerá acá...';
+  document.getElementById('groq-out').textContent=data.groq_tip||'El mensaje aparecerá acá...';
+  const prev=document.getElementById('p-img-prev');
+  if(data.image_url){prev.src=data.image_url;prev.classList.add('on');}
+  else{prev.src='';prev.classList.remove('on');}
   document.getElementById('prod-form-title').textContent='✏️ Editar producto';
-  document.getElementById('prod-form-card').scrollIntoView({behavior:'smooth'});
+  document.getElementById('prod-form-title').scrollIntoView({behavior:'smooth'});
 }
-
 function resetProdForm(){
-  document.getElementById('edit-id').value='';
+  document.getElementById('edit-prod-id').value='';
   document.getElementById('p-name').value='';
   document.getElementById('p-price').value='';
   document.getElementById('p-desc').value='';
   document.getElementById('p-img').value='';
   document.getElementById('p-img-file').value='';
-  const prev = document.getElementById('p-img-preview');
-  prev.src=''; prev.classList.remove('on');
+  const prev=document.getElementById('p-img-prev');
+  prev.src='';prev.classList.remove('on');
   document.getElementById('p-emoji').value='';
   document.getElementById('p-multi').checked=false;
   document.getElementById('p-visible').checked=true;
-  document.getElementById('groq-out').textContent='El mensaje del bot aparecerá acá...';
+  document.getElementById('groq-out').textContent='El mensaje aparecerá acá...';
   document.getElementById('prod-form-title').textContent='➕ Nuevo producto';
 }
-
 async function saveProduct(){
-  if(!currentStore) return;
-  const id = document.getElementById('edit-id').value;
-  const name = document.getElementById('p-name').value.trim();
-  const price = parseFloat(document.getElementById('p-price').value);
+  if(!currentStoreId) return;
+  const id=document.getElementById('edit-prod-id').value;
+  const name=document.getElementById('p-name').value.trim();
+  const price=parseFloat(document.getElementById('p-price').value);
   if(!name){toast('⚠️ El nombre es obligatorio');return;}
   if(!price||isNaN(price)){toast('⚠️ El precio es obligatorio');return;}
-  const groqTxt = document.getElementById('groq-out').textContent;
-  const payload = {
-    store_id: currentStore.id,
-    name, price,
-    description: document.getElementById('p-desc').value.trim()||null,
-    image_url: document.getElementById('p-img').value.trim()||null,
-    emoji: document.getElementById('p-emoji').value.trim()||'📦',
-    multi_buyer: document.getElementById('p-multi').checked,
-    visible: document.getElementById('p-visible').checked,
-    groq_tip: groqTxt.includes('aparecerá')?null:groqTxt
+  const groqTxt=document.getElementById('groq-out').textContent;
+  const payload={
+    store_id:currentStoreId,name,price,
+    description:document.getElementById('p-desc').value.trim()||null,
+    image_url:document.getElementById('p-img').value||null,
+    emoji:document.getElementById('p-emoji').value.trim()||'📦',
+    multi_buyer:document.getElementById('p-multi').checked,
+    visible:document.getElementById('p-visible').checked,
+    groq_tip:groqTxt.includes('aparecerá')?null:groqTxt
   };
   if(id){
     const {error}=await sb.from('delmer_products').update(payload).eq('id',id);
@@ -664,42 +971,32 @@ async function saveProduct(){
     toast('✅ Producto guardado');
   }
   resetProdForm();
-  loadOwnerProducts();
+  loadStoreProdList(currentStoreId);
 }
 
-// ── FILE PICKER & STORAGE ──
-function previewImg(input, previewId) {
+// ── FILE PICKER ──
+function pickImg(input, previewId, hiddenId, statusId) {
   const file = input.files[0];
-  if (!file) return;
-  const preview = document.getElementById(previewId);
+  if(!file) return;
+  const prev = document.getElementById(previewId);
   const reader = new FileReader();
-  reader.onload = e => {
-    preview.src = e.target.result;
-    preview.classList.add('on');
-  };
+  reader.onload = e => { prev.src=e.target.result; prev.classList.add('on'); };
   reader.readAsDataURL(file);
-  // Upload automático al elegir
-  const uploadingId = input.id === 'p-img-file' ? 'p-img-uploading' : 'cfg-logo-uploading';
-  const hiddenId   = input.id === 'p-img-file' ? 'p-img'           : 'cfg-logo';
-  uploadImage(file, uploadingId, hiddenId);
+  uploadImg(file, hiddenId, statusId);
 }
-
-async function uploadImage(file, uploadingId, hiddenId) {
-  const uploadingEl = document.getElementById(uploadingId);
-  uploadingEl.classList.add('on');
+async function uploadImg(file, hiddenId, statusId) {
+  const statusEl = document.getElementById(statusId);
+  statusEl.textContent='⏳ Subiendo...'; statusEl.classList.add('on');
   try {
     const ext = file.name.split('.').pop();
-    const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-    const path = `delmer/${filename}`;
-    const { data, error } = await sb.storage.from('delmer-images').upload(path, file, { upsert: true });
-    if (error) { uploadingEl.textContent = '❌ Error al subir'; return; }
-    const { data: urlData } = sb.storage.from('delmer-images').getPublicUrl(path);
+    const path = `delmer/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const {error} = await sb.storage.from('delmer-images').upload(path, file, {upsert:true});
+    if(error){statusEl.textContent='❌ Error al subir';return;}
+    const {data:urlData} = sb.storage.from('delmer-images').getPublicUrl(path);
     document.getElementById(hiddenId).value = urlData.publicUrl;
-    uploadingEl.textContent = '✅ Imagen subida';
-    setTimeout(() => { uploadingEl.classList.remove('on'); uploadingEl.textContent = '⏳ Subiendo...'; }, 2000);
-  } catch(e) {
-    uploadingEl.textContent = '❌ Error: ' + e.message;
-  }
+    statusEl.textContent='✅ Imagen subida';
+    setTimeout(()=>{statusEl.classList.remove('on');statusEl.textContent='⏳ Subiendo...';},2200);
+  } catch(e){ statusEl.textContent='❌ '+e.message; }
 }
 
 // ── GROQ ──
@@ -711,12 +1008,12 @@ async function askGroq(){
   if(!name||!price){out.textContent='⚠️ Completá nombre y precio primero.';return;}
   out.textContent='⏳ Generando...';
   try {
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
       body:JSON.stringify({
-        model:'llama3-8b-8192',
-        messages:[{role:'user',content:`Sos un experto en ventas online argentino. El producto "${name}" cuesta $${Number(price).toLocaleString('es-AR')} y ${multi?'PUEDE ser comprado por múltiples personas':'es de stock único/limitado'}. Escribí UN mensaje corto (máx 2 oraciones) atractivo en español argentino informal para mostrar a compradores en la tienda. Sin hashtags ni emojis de estrella. Solo el texto.`}],
+        model:'openai/gpt-4o-mini',
+        messages:[{role:'user',content:`Sos un experto en ventas online argentino. El producto "${name}" cuesta $${Number(price).toLocaleString('es-AR')} y ${multi?'PUEDE ser comprado por múltiples personas':'es de stock único/limitado'}. Escribí UN mensaje corto (máx 2 oraciones) atractivo en español argentino informal para mostrar en la tienda. Sin hashtags. Solo el texto.`}],
         max_tokens:100,temperature:0.8
       })
     });
@@ -725,25 +1022,130 @@ async function askGroq(){
   } catch(e){ out.textContent='⚠️ Error al conectar con el bot.'; }
 }
 
-// ── LINK COPY ──
-function copyLink(){
-  const url=document.getElementById('store-link-url').textContent;
-  navigator.clipboard.writeText(url).then(()=>toast('📋 Link copiado!'));
+// ── QR ──
+let qrSelectedStore = null;
+let qrSelectedLogo = 'delmer';
+
+function renderQrStores() {
+  const grid = document.getElementById('qr-stores-grid');
+  if(!myStores.length){grid.innerHTML='<div style="color:var(--muted);font-size:.88rem">No tenés tiendas todavía.</div>';return;}
+  grid.innerHTML = myStores.map(s=>`
+    <div class="qr-store-btn ${qrSelectedStore===s.id?'selected':''}" onclick="selectQrStore(${s.id},'${s.name}','${s.logo_url||''}')">
+      ${s.name}
+    </div>
+  `).join('');
+  if(myStores.length===1) selectQrStore(myStores[0].id, myStores[0].name, myStores[0].logo_url||'');
+}
+
+function selectQrStore(id, name, logoUrl) {
+  qrSelectedStore = id;
+  document.querySelectorAll('.qr-store-btn').forEach(b=>b.classList.remove('selected'));
+  event?.currentTarget?.classList.add('selected');
+  // Logo tienda
+  const tiendaImg = document.getElementById('qr-logo-tienda-img');
+  const tiendaPh = document.getElementById('qr-logo-tienda-ph');
+  if(logoUrl){tiendaImg.src=logoUrl;tiendaImg.style.display='block';tiendaPh.style.display='none';}
+  else{tiendaImg.style.display='none';tiendaPh.style.display='flex';}
+  previewQR();
+}
+
+function selectQrLogo(type) {
+  qrSelectedLogo = type;
+  document.getElementById('qr-opt-delmer').classList.toggle('selected', type==='delmer');
+  document.getElementById('qr-opt-tienda').classList.toggle('selected', type==='tienda');
+  previewQR();
+}
+
+function previewQR() {
+  if(!qrSelectedStore) return;
+  const store = myStores.find(s=>s.id===qrSelectedStore);
+  if(!store) return;
+  const baseUrl = window.location.href.split('?')[0].replace(/#.*/,'');
+  const url = store.custom_slug
+    ? baseUrl.replace(/\/[^/]*$/, '/') + store.custom_slug
+    : `${baseUrl}?tienda=${store.id}`;
+  const canvas = document.getElementById('qr-canvas');
+  QRCode.toCanvas(canvas, url, {width:250,margin:2,color:{dark:'#111111',light:'#ffffff'}}, err=>{
+    if(err) return;
+    // Dibujar logo encima
+    const ctx = canvas.getContext('2d');
+    const logoSrc = qrSelectedLogo==='delmer'
+      ? 'data:image/png;base64,'+LOGO_B64
+      : (store.logo_url||null);
+    if(!logoSrc) return;
+    const img = new Image();
+    img.onload = () => {
+      const sz = 54;
+      const x = (canvas.width-sz)/2;
+      const y = (canvas.height-sz)/2;
+      ctx.fillStyle='#fff';
+      ctx.roundRect(x-4,y-4,sz+8,sz+8,8);
+      ctx.fill();
+      ctx.drawImage(img,x,y,sz,sz);
+    };
+    img.src = logoSrc;
+  });
+}
+
+async function generateAndDownloadQR() {
+  if(!qrSelectedStore){toast('⚠️ Seleccioná una tienda primero');return;}
+  if(userCredits < 20){toast('⚠️ Necesitás 20 créditos para descargar el QR');return;}
+  previewQR();
+  setTimeout(async ()=>{
+    const canvas = document.getElementById('qr-canvas');
+    const link = document.createElement('a');
+    link.download = 'qr-tienda.png';
+    link.href = canvas.toDataURL();
+    link.click();
+    await spendCredits(20,'QR generado');
+    toast('✅ QR descargado!');
+  }, 500);
+}
+
+// ── SUSCRIPCION ──
+function updatePlanUI() {
+  const plans=['gratuit','cheap','plus','maximus'];
+  plans.forEach(p=>{
+    const card=document.getElementById('plan-'+p);
+    const btn=document.getElementById('btn-plan-'+p);
+    if(!card||!btn) return;
+    if(p===userPlan){
+      card.classList.add('active-plan');
+      btn.textContent='Plan actual';
+      btn.classList.add('current');
+    } else {
+      card.classList.remove('active-plan');
+      btn.textContent='Suscribirse';
+      btn.classList.remove('current');
+    }
+  });
+}
+function renderSuscripcion() { updatePlanUI(); }
+function selectPlan(plan) {
+  if(plan===userPlan){toast('Ya estás en este plan');return;}
+  if(confirm(`¿Cambiarte al plan ${capitalize(plan)}? (En esta versión el pago es manual — contactá al admin)`)){
+    toast('📩 Enviá tu comprobante de pago al admin para activar el plan '+capitalize(plan));
+  }
 }
 
 // ── TIENDA PÚBLICA ──
 let cart=[];
 let pubStore=null;
 
-async function loadPublicStore(storeId){
-  // Traer tienda
-  const {data:store,error} = await sb.from('delmer_stores').select('*').eq('id',storeId).eq('active',true).single();
-  if(error||!store){showScreen('scr-404');return;}
+async function loadPublicStore(storeId) {
+  const isSlug = isNaN(storeId);
+  let query = sb.from('delmer_stores').select('*').eq('active',true);
+  if(isSlug) query = query.eq('custom_slug', storeId);
+  else query = query.eq('id', parseInt(storeId));
+  const {data:store,error} = await query.single();
+  if(error||!store){showScreen404();return;}
   pubStore=store;
-
-  // Title y meta
-  document.title=store.name+' – Del_MER';
-
+  // Favicon y título
+  document.title = store.name + ' – Del_MER';
+  if(store.logo_url){
+    const link=document.getElementById('favicon-link');
+    link.href=store.logo_url;
+  }
   // Hero
   document.getElementById('pub-store-name').textContent=store.name;
   document.getElementById('pub-store-desc').textContent=store.description||'';
@@ -752,44 +1154,34 @@ async function loadPublicStore(storeId){
     document.getElementById('pub-logo-img').style.display='block';
     document.getElementById('pub-logo-ph').style.display='none';
   }
-
-  showScreen('scr-store');
-  document.getElementById('navbar').classList.remove('on');
+  document.getElementById('scr-public').classList.add('on');
+  document.getElementById('scr-loading').classList.add('off');
   document.getElementById('cart-fab').classList.add('on');
-
-  // Theme toggle en navbar público
-  applyTheme();
-
   // Productos
-  const {data:prods} = await sb.from('delmer_products').select('*').eq('store_id',storeId).eq('visible',true).order('created_at',{ascending:false});
-  renderPubProducts(prods||[]);
+  const {data:prods}=await sb.from('delmer_products').select('*').eq('store_id',store.id).eq('visible',true).order('created_at',{ascending:false});
+  renderPubProds(prods||[]);
 }
 
-function renderPubProducts(list){
+function renderPubProds(list){
+  window._pubProds=list;
   const grid=document.getElementById('pub-grid');
-  if(!list.length){
-    grid.innerHTML='<div class="empty-pub"><h3>Sin productos por ahora</h3><p>El dueño de la tienda todavía no cargó productos.</p></div>';
-    return;
-  }
+  if(!list.length){grid.innerHTML='<div class="empty-pub"><h3>Sin productos por ahora</h3><p>Volvé pronto!</p></div>';return;}
   grid.innerHTML=list.map(p=>`
     <div class="prod-card">
       ${p.image_url?`<img class="prod-img" src="${p.image_url}" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:``}
-      <div class="prod-img-ph" style="${p.image_url?'display:none':''}"> ${p.emoji||'📦'}</div>
+      <div class="prod-img-ph" style="${p.image_url?'display:none':''}">${p.emoji||'📦'}</div>
       <div class="prod-body">
         <div class="prod-name">${p.name}</div>
-        ${p.description?`<div class="prod-desc">${p.description}</div>`:''}
+        ${p.description?`<div class="prod-desc-pub">${p.description}</div>`:''}
         <div class="prod-price">$${Number(p.price).toLocaleString('es-AR')}</div>
         ${p.multi_buyer?`<div class="multi-badge">⭐ Puede comprarlo más de una persona</div>`:''}
         ${p.groq_tip?`<div class="groq-tip">💡 ${p.groq_tip}</div>`:''}
-        <button class="btn-buy" onclick="addToCart(${p.id})">Agregar al carrito</button>
+        <button class="btn-buy" onclick="addToCart(${p.id})">🛒 Comprar</button>
       </div>
     </div>
   `).join('');
-  // Guardar lista para el carrito
-  window._pubProds = list;
 }
 
-// ── CARRITO ──
 function addToCart(id){
   const p=window._pubProds?.find(x=>x.id===id);
   if(!p) return;
@@ -800,42 +1192,36 @@ function addToCart(id){
   toast('✅ '+p.name+' agregado');
 }
 function updateCartUI(){
-  const total=cart.reduce((s,x)=>s+x.qty,0);
-  document.getElementById('cart-cnt').textContent=total;
+  document.getElementById('cart-cnt').textContent=cart.reduce((s,x)=>s+x.qty,0);
 }
 function openCart(){
   const list=document.getElementById('cart-list');
-  if(!cart.length){
-    list.innerHTML='<div style="text-align:center;padding:28px;color:var(--muted)">Tu carrito está vacío</div>';
-  } else {
-    list.innerHTML=cart.map(x=>`
-      <div class="cart-item">
-        <div>
-          <div class="cart-item-name">${x.name}</div>
-          <div style="font-size:.78rem;color:var(--muted)">x${x.qty}</div>
-        </div>
-        <div class="cart-item-price">$${Number(x.price*x.qty).toLocaleString('es-AR')}</div>
-      </div>
-    `).join('');
-  }
+  list.innerHTML=!cart.length
+    ?'<div style="text-align:center;padding:24px;color:var(--muted)">Tu carrito está vacío</div>'
+    :cart.map(x=>`<div class="cart-item"><div><div class="cart-item-name">${x.name}</div><div style="font-size:.76rem;color:var(--muted)">x${x.qty}</div></div><div class="cart-item-price">$${Number(x.price*x.qty).toLocaleString('es-AR')}</div></div>`).join('');
   const total=cart.reduce((s,x)=>s+x.price*x.qty,0);
   document.getElementById('cart-total').textContent='$'+Number(total).toLocaleString('es-AR');
   document.getElementById('cart-overlay').classList.add('open');
 }
-function closeCart(){ document.getElementById('cart-overlay').classList.remove('open'); }
+function closeCart(){document.getElementById('cart-overlay').classList.remove('open');}
 async function doCheckout(){
   if(!cart.length) return;
-  if(!pubStore?.whatsapp){ toast('Esta tienda no configuró WhatsApp todavía.'); return; }
+  if(!pubStore?.whatsapp){toast('Esta tienda no configuró WhatsApp todavía.');return;}
   const lines=cart.map(x=>`• ${x.name} x${x.qty} = $${Number(x.price*x.qty).toLocaleString('es-AR')}`).join('\n');
   const total=cart.reduce((s,x)=>s+x.price*x.qty,0);
   const msg=encodeURIComponent(`¡Hola! Me interesa comprar de *${pubStore.name}*:\n${lines}\n\n*Total: $${Number(total).toLocaleString('es-AR')}*`);
   window.open(`https://wa.me/${pubStore.whatsapp.replace(/\D/g,'')}?text=${msg}`,'_blank');
 }
 
+function showScreen404(){
+  document.getElementById('scr-loading').classList.add('off');
+  document.getElementById('scr-404').classList.add('on');
+}
+
 // ── TOAST ──
 function toast(msg){
   const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
+  t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
 
@@ -843,30 +1229,41 @@ function toast(msg){
 async function init(){
   setLogos();
   applyTheme();
-
-  const params = new URLSearchParams(window.location.search);
-  const tiendaId = params.get('tienda');
-
-  if(tiendaId){
-    // Modo tienda pública
-    await loadPublicStore(tiendaId);
+  const params=new URLSearchParams(window.location.search);
+  const tiendaParam=params.get('tienda');
+  // También soportar slug en la URL tipo /mi-tienda
+  const pathParts=window.location.pathname.split('/').filter(Boolean);
+  // Solo detectar slug si estamos en un servidor real (no en archivo local)
+  const isLocalFile = window.location.protocol === 'file:';
+  const knownFiles = ['delmer.html','delmer-admin.html','index.html'];
+  const lastPart = pathParts[pathParts.length-1]||'';
+  // slugPart solo existe si: no es local, hay al menos 2 segmentos de path, y el último no es un .html conocido
+  const slugPart = (!isLocalFile && pathParts.length>=2 && !knownFiles.includes(lastPart) && !lastPart.endsWith('.html'))
+    ? lastPart : null;
+  if(tiendaParam){
+    await loadPublicStore(tiendaParam);
     return;
   }
-
-  // Modo panel dueño — chequear sesión
-  const {data:{session}} = await sb.auth.getSession();
-  if(session){
-    await loadOwnerPanel(session.user);
-  } else {
-    showScreen('scr-login');
+  if(slugPart){
+    await loadPublicStore(slugPart);
+    return;
   }
-
+  // Panel dueño
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){
+    await enterApp(session.user);
+  } else {
+    document.getElementById('scr-loading').classList.add('off');
+    document.getElementById('scr-login').classList.add('on');
+  }
   sb.auth.onAuthStateChange(async (event,session)=>{
-    if(event==='SIGNED_IN'&&session) await loadOwnerPanel(session.user);
-    if(event==='SIGNED_OUT') showScreen('scr-login');
+    if(event==='SIGNED_IN'&&session) await enterApp(session.user);
+    if(event==='SIGNED_OUT'){
+      document.getElementById('app').classList.remove('on');
+      document.getElementById('scr-login').classList.add('on');
+    }
   });
 }
-
 init();
 </script>
 </body>
