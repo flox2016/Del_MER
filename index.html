@@ -7,13 +7,7 @@
 <link id="favicon.png" rel="icon" href="A (1).png">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- QR: no depende de una librería JS externa; usa un generador QR por imagen -->
-<script>
-window.QR_API_URLS = [
-  'https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=2&data=',
-  'https://quickchart.io/qr?size=250&margin=2&ecLevel=H&text='
-];
-</script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <style>
 :root{
@@ -484,7 +478,7 @@ img{max-width:100%}
     <div class="card">
       <div class="card-title">3. Vista previa</div>
       <div class="qr-canvas-wrap">
-        <canvas id="qr-canvas" width="250" height="250" aria-label="Código QR"></canvas>
+        <canvas id="qr-canvas" width="250" height="250"></canvas>
       </div>
       <div style="text-align:center;margin-bottom:14px">
         <span class="cost-chip">Costo: 20 ⭐</span>
@@ -513,25 +507,25 @@ img{max-width:100%}
       <div class="plan-card" id="plan-gratuit" onclick="selectPlan('gratuit')">
         <div class="plan-name">Gratuit</div>
         <div class="plan-price">$0<span>/mes</span></div>
-        <div class="plan-credits">⭐ 2 créditos / semana</div>
+        <div class="plan-credits">⭐ 2 créditos / hora</div>
         <button class="btn-plan current" id="btn-plan-gratuit">Plan actual</button>
       </div>
       <div class="plan-card" id="plan-cheap" onclick="selectPlan('cheap')">
         <div class="plan-name">Cheap</div>
         <div class="plan-price">$10<span>/mes</span></div>
-        <div class="plan-credits">⭐ 10 créditos / semana</div>
+        <div class="plan-credits">⭐ 10 créditos / hora</div>
         <button class="btn-plan" id="btn-plan-cheap">Suscribirse</button>
       </div>
       <div class="plan-card" id="plan-plus" onclick="selectPlan('plus')">
         <div class="plan-name">Plus</div>
         <div class="plan-price">$100<span>/mes</span></div>
-        <div class="plan-credits">⭐ 50 créditos / semana</div>
+        <div class="plan-credits">⭐ 50 créditos / hora</div>
         <button class="btn-plan" id="btn-plan-plus">Suscribirse</button>
       </div>
       <div class="plan-card" id="plan-maximus" onclick="selectPlan('maximus')">
         <div class="plan-name">Maximus</div>
         <div class="plan-price">$300<span>/mes</span></div>
-        <div class="plan-credits">⭐ 150 créditos / semana</div>
+        <div class="plan-credits">⭐ 150 créditos / hora</div>
         <button class="btn-plan" id="btn-plan-maximus">Suscribirse</button>
       </div>
     </div>
@@ -588,6 +582,52 @@ img{max-width:100%}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M13.507.036C6.649.036 1.064 5.619 1.064 12.478c0 2.192.573 4.33 1.658 6.215L.139 23.78l5.246-1.554a11.43 11.43 0 0 0 8.116 3.261c6.857 0 12.44-5.583 12.44-12.44C25.941 6.192 20.36.036 13.507.036zm0 22.758a10.31 10.31 0 0 1-5.247-1.428l-.375-.224-3.895 1.023.979-3.795-.241-.394a10.316 10.316 0 0 1-1.583-5.498c0-5.7 4.638-10.337 10.362-10.337 5.721 0 10.362 4.637 10.362 10.337 0 5.699-4.641 10.316-10.362 10.316z"/></svg>
       Consultar por WhatsApp
     </button>
+  </div>
+</div>
+
+<!-- MODAL PAGO SUSCRIPCION -->
+<div class="overlay" id="pay-overlay">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-hd">
+      <div class="modal-title">💳 Suscribirse a <span id="pay-plan-name">Plan</span></div>
+      <button class="btn-icon" onclick="closePayModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:linear-gradient(135deg,rgba(135,206,235,.12),rgba(90,175,212,.08));border:1px solid var(--sky);border-radius:10px;padding:16px;margin-bottom:16px;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--muted);margin-bottom:4px">Precio del plan</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:2.8rem;font-weight:900;color:var(--sky-deep)" id="pay-plan-price">$0</div>
+        <div style="font-size:.82rem;color:var(--muted)">/mes · <span id="pay-plan-credits"></span></div>
+      </div>
+
+      <div style="font-size:.88rem;color:var(--text);margin-bottom:14px;line-height:1.6">
+        <strong>¿Cómo suscribirse?</strong><br>
+        1. Sacá una captura de pantalla de tu Mercado Pago mostrando que tenés el saldo disponible (<span id="pay-amount-txt" style="color:var(--sky-deep);font-weight:700"></span>).<br>
+        2. Subí la captura acá abajo.<br>
+        3. El admin verifica y te activa el plan.
+      </div>
+
+      <div class="form-group">
+        <label>Captura de Mercado Pago</label>
+        <div class="file-pick-wrap">
+          <label class="file-pick-btn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Elegir captura
+            <input type="file" id="pay-capture-file" accept="image/*" onchange="previewPayCapture(this)">
+          </label>
+          <img id="pay-capture-preview" class="img-preview" alt="preview">
+          <span class="upload-status" id="pay-capture-status">⏳ Subiendo...</span>
+          <input type="hidden" id="pay-capture-url">
+        </div>
+      </div>
+
+      <div id="pay-success-msg" style="display:none;background:#dcfce7;color:#16a34a;border-radius:8px;padding:10px 14px;font-size:.86rem;margin-top:8px">
+        ✅ Captura enviada. El admin revisará tu solicitud pronto.
+      </div>
+    </div>
+    <div style="padding:0 20px 16px;display:flex;gap:10px">
+      <button class="btn-save" id="pay-submit-btn" onclick="submitPayment()">📤 Enviar solicitud</button>
+      <button class="btn-sm" onclick="closePayModal()">Cancelar</button>
+    </div>
   </div>
 </div>
 
@@ -708,6 +748,9 @@ async function enterApp(user) {
   document.getElementById('app').classList.add('on');
   document.getElementById('scr-loading').classList.add('off');
   await loadUserData();
+  await checkHourlyCredits();
+  // Chequear créditos cada 10 minutos
+  setInterval(checkHourlyCredits, 10 * 60 * 1000);
   goTo('tiendas');
 }
 
@@ -726,7 +769,7 @@ async function loadUserData() {
   document.getElementById('st-plan').textContent = capitalize(userPlan);
   document.getElementById('current-plan-name').textContent = capitalize(userPlan);
   const planCredits = {gratuit:'2',cheap:'10',plus:'50',maximus:'150'};
-  document.getElementById('current-plan-credits').textContent = (planCredits[userPlan]||'2') + ' créditos por semana';
+  document.getElementById('current-plan-credits').textContent = (planCredits[userPlan]||'2') + ' créditos por hora';
 
   // Tiendas
   const {data:stores} = await sb.from('delmer_stores').select('*').eq('user_id', currentUser.id).order('created_at',{ascending:true});
@@ -1095,107 +1138,51 @@ function selectQrLogo(type) {
 }
 
 function previewQR() {
+  if(!qrSelectedStore) return;
+  const store = myStores.find(s=>s.id===qrSelectedStore);
+  if(!store) return;
+  const baseUrl = window.location.href.split('?')[0].replace(/#.*/,'');
+  const url = store.custom_slug
+    ? baseUrl.replace(/\/[^/]*$/, '/') + store.custom_slug
+    : `${baseUrl}?tienda=${store.id}`;
   const canvas = document.getElementById('qr-canvas');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  if(!qrSelectedStore){
-    showQrMessage(ctx,'Seleccioná una tienda');
-    return;
-  }
-  const store = myStores.find(s=>String(s.id)===String(qrSelectedStore));
-  if(!store){
-    showQrMessage(ctx,'No se encontró la tienda');
-    return;
-  }
-
-  const baseUrl = window.location.href.split('?')[0].replace(/#.*/, '');
-  let url;
-  if(store.custom_slug){
-    const cleanBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
-    url = cleanBase + encodeURIComponent(store.custom_slug);
-  } else {
-    url = baseUrl + '?tienda=' + encodeURIComponent(store.id);
-  }
-
-  // Generamos el QR como imagen. Así Del_MER no depende de qrcode.min.js.
-  const apis = Array.isArray(window.QR_API_URLS) ? window.QR_API_URLS : [];
-  let apiIndex = 0;
-
-  const tryNextApi = () => {
-    if(apiIndex >= apis.length){
-      showQrMessage(ctx,'No se pudo generar el QR','Revisá tu conexión');
-      return;
-    }
-    const src = apis[apiIndex++] + encodeURIComponent(url);
+  QRCode.toCanvas(canvas, url, {width:250,margin:2,color:{dark:'#111111',light:'#ffffff'}}, err=>{
+    if(err){ console.error('QR error:',err); return; }
+    const logoSrc = qrSelectedLogo==='delmer'
+      ? 'data:image/png;base64,'+LOGO_B64
+      : (store.logo_url||null);
+    if(!logoSrc) return;
+    const ctx = canvas.getContext('2d');
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
-      try {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle='#fff';
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.drawImage(img,0,0,250,250);
-        drawQrLogo(ctx, store);
-      } catch(e) {
-        console.warn('QR: error al dibujar el código:',e);
-        tryNextApi();
-      }
+      const sz = 54;
+      const x = (canvas.width-sz)/2;
+      const y = (canvas.height-sz)/2;
+      const pad = 5;
+      // Fondo blanco redondeado (compatible sin roundRect)
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      const rx = x-pad, ry = y-pad, rw = sz+pad*2, rh = sz+pad*2, r = 8;
+      ctx.moveTo(rx+r, ry);
+      ctx.lineTo(rx+rw-r, ry);
+      ctx.quadraticCurveTo(rx+rw, ry, rx+rw, ry+r);
+      ctx.lineTo(rx+rw, ry+rh-r);
+      ctx.quadraticCurveTo(rx+rw, ry+rh, rx+rw-r, ry+rh);
+      ctx.lineTo(rx+r, ry+rh);
+      ctx.quadraticCurveTo(rx, ry+rh, rx, ry+rh-r);
+      ctx.lineTo(rx, ry+r);
+      ctx.quadraticCurveTo(rx, ry, rx+r, ry);
+      ctx.closePath();
+      ctx.fill();
+      ctx.drawImage(img, x, y, sz, sz);
     };
     img.onerror = () => {
-      console.warn('QR API no disponible:', src);
-      tryNextApi();
+      // Si falla la imagen igual muestra el QR sin logo
+      console.warn('No se pudo cargar el logo para el QR');
     };
-    img.src = src;
-  };
-
-  tryNextApi();
-}
-
-function showQrMessage(ctx, line1, line2){
-  ctx.clearRect(0,0,250,250);
-  ctx.fillStyle='#fff';
-  ctx.fillRect(0,0,250,250);
-  ctx.fillStyle='#111';
-  ctx.textAlign='center';
-  ctx.font='bold 14px Inter, sans-serif';
-  ctx.fillText(line1,125,118);
-  if(line2){
-    ctx.font='12px Inter, sans-serif';
-    ctx.fillText(line2,125,140);
-  }
-}
-
-function drawQrLogo(ctx, store){
-  const logoSrc = qrSelectedLogo==='delmer'
-    ? 'data:image/png;base64,'+LOGO_B64
-    : (store.logo_url||null);
-  if(!logoSrc) return;
-
-  const img = new Image();
-  img.crossOrigin='anonymous';
-  img.onload=()=>{
-    // Logo pequeño para no tapar demasiados módulos del QR.
-    // Con corrección de errores H, 30px mantiene el QR mucho más fácil de escanear.
-    const sz=30, pad=5;
-    const x=(250-sz)/2, y=(250-sz)/2;
-    ctx.fillStyle='#fff';
-    ctx.beginPath();
-    const rx=x-pad, ry=y-pad, rw=sz+pad*2, rh=sz+pad*2, r=9;
-    ctx.moveTo(rx+r,ry); ctx.lineTo(rx+rw-r,ry);
-    ctx.quadraticCurveTo(rx+rw,ry,rx+rw,ry+r);
-    ctx.lineTo(rx+rw,ry+rh-r); ctx.quadraticCurveTo(rx+rw,ry+rh,rx+rw-r,ry+rh);
-    ctx.lineTo(rx+r,ry+rh); ctx.quadraticCurveTo(rx,ry+rh,rx,ry+rh-r);
-    ctx.lineTo(rx,ry+r); ctx.quadraticCurveTo(rx,ry,rx+r,ry);
-    ctx.closePath(); ctx.fill();
-    try { ctx.drawImage(img,x,y,sz,sz); }
-    catch(e){ console.warn('QR: no se pudo colocar el logo:',e); }
-  };
-  img.onerror=()=>console.warn('QR: no se pudo cargar el logo; se muestra el QR sin logo.');
-  img.src=logoSrc;
+    img.src = logoSrc;
+  });
 }
 
 async function generateAndDownloadQR() {
@@ -1232,10 +1219,94 @@ function updatePlanUI() {
   });
 }
 function renderSuscripcion() { updatePlanUI(); }
+// ── PLAN PRICING ──
+const PLAN_INFO = {
+  gratuit: { name:'Gratuit', price:0,   credits:2,   label:'2 créditos / hora' },
+  cheap:   { name:'Cheap',   price:10,  credits:10,  label:'10 créditos / hora' },
+  plus:    { name:'Plus',    price:100, credits:50,  label:'50 créditos / hora' },
+  maximus: { name:'Maximus', price:300, credits:150, label:'150 créditos / hora' }
+};
+
+let selectedPayPlan = null;
+
 function selectPlan(plan) {
   if(plan===userPlan){toast('Ya estás en este plan');return;}
-  if(confirm(`¿Cambiarte al plan ${capitalize(plan)}? (En esta versión el pago es manual — contactá al admin)`)){
-    toast('📩 Enviá tu comprobante de pago al admin para activar el plan '+capitalize(plan));
+  if(plan==='gratuit'){toast('El plan Gratuit es gratuito, ya lo tenés disponible');return;}
+  openPayModal(plan);
+}
+
+function openPayModal(plan) {
+  selectedPayPlan = plan;
+  const info = PLAN_INFO[plan];
+  document.getElementById('pay-plan-name').textContent = info.name;
+  document.getElementById('pay-plan-price').textContent = '$'+info.price;
+  document.getElementById('pay-plan-credits').textContent = info.label;
+  document.getElementById('pay-amount-txt').textContent = '$'+info.price;
+  document.getElementById('pay-capture-preview').classList.remove('on');
+  document.getElementById('pay-capture-preview').src='';
+  document.getElementById('pay-capture-url').value='';
+  document.getElementById('pay-capture-file').value='';
+  document.getElementById('pay-capture-status').classList.remove('on');
+  document.getElementById('pay-success-msg').style.display='none';
+  document.getElementById('pay-submit-btn').style.display='flex';
+  document.getElementById('pay-overlay').classList.add('open');
+}
+
+function closePayModal() {
+  document.getElementById('pay-overlay').classList.remove('open');
+  selectedPayPlan = null;
+}
+
+function previewPayCapture(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const prev = document.getElementById('pay-capture-preview');
+  const reader = new FileReader();
+  reader.onload = e => { prev.src=e.target.result; prev.classList.add('on'); };
+  reader.readAsDataURL(file);
+  uploadImg(file, 'pay-capture-url', 'pay-capture-status');
+}
+
+async function submitPayment() {
+  const captureUrl = document.getElementById('pay-capture-url').value;
+  if(!captureUrl){ toast('⚠️ Subí la captura primero'); return; }
+  if(!selectedPayPlan) return;
+  const info = PLAN_INFO[selectedPayPlan];
+  // Guardar solicitud en Supabase
+  const {error} = await sb.from('delmer_plan_requests').insert([{
+    user_id: currentUser.id,
+    user_email: currentUser.email,
+    plan: selectedPayPlan,
+    amount: info.price,
+    capture_url: captureUrl,
+    status: 'pending'
+  }]);
+  if(error){ toast('❌ Error al enviar: '+error.message); return; }
+  document.getElementById('pay-success-msg').style.display='block';
+  document.getElementById('pay-submit-btn').style.display='none';
+  toast('✅ Solicitud enviada! El admin la revisará pronto.');
+}
+
+// ── CRÉDITOS POR HORA ──
+async function checkHourlyCredits() {
+  if(!currentUser) return;
+  const {data:cred} = await sb.from('delmer_credits').select('*').eq('user_id', currentUser.id).single();
+  if(!cred) return;
+  const lastWeekly = new Date(cred.last_weekly);
+  const now = new Date();
+  const diffHours = (now - lastWeekly) / (1000 * 60 * 60);
+  if(diffHours >= 1) {
+    const info = PLAN_INFO[cred.plan||'gratuit'];
+    const newCredits = (cred.credits||0) + info.credits;
+    await sb.from('delmer_credits').update({
+      credits: newCredits,
+      last_weekly: now.toISOString()
+    }).eq('user_id', currentUser.id);
+    userCredits = newCredits;
+    document.getElementById('credits-val').textContent = userCredits;
+    document.getElementById('current-credits-big').textContent = userCredits;
+    document.getElementById('st-creditos').textContent = userCredits;
+    toast('⭐ +'+info.credits+' créditos ganados!');
   }
 }
 
