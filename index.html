@@ -153,11 +153,15 @@ img{max-width:100%}
 .btn-groq:hover{opacity:.88}
 
 /* QR */
-window.QR_API_URLS = [
-  'https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=2&data=',
-  'https://quickchart.io/qr?size=250&margin=2&ecLevel=H&text='
-];
-
+.qr-stores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px} 
+.qr-store-btn{padding:14px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--card);cursor:pointer;text-align:center;transition:all .2s;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;color:var(--text)} 
+.qr-store-btn:hover,.qr-store-btn.selected{border-color:var(--sky-deep);background:rgba(135,206,235,.1);color:var(--sky-deep)} 
+.qr-logo-opts{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap} .qr-logo-opt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s;flex:1;min-width:120px} 
+.qr-logo-opt:hover,
+.qr-logo-opt.selected{border-color:var(--sky-deep);background:rgba(135,206,235,.1)}
+.qr-logo-opt img{width:50px;height:50px;object-fit:cover;border-radius:8px} 
+.qr-logo-opt span{font-size:.8rem;font-weight:600;color:var(--text);text-align:center} 
+.qr-canvas-wrap{display:flex;justify-content:center;margin:16px 0} #qr-canvas{border-radius:10px;border:1px solid var(--border)} .cost-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.4);border-radius:20px;padding:4px 12px;font-size:.82rem;font-weight:700;color:#b8860b} [data-theme=dark] .cost-chip{color:#f5c518}
 /* SUSCRIPCION */
 .plans-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px}
 .plan-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:10px;transition:all .2s;cursor:pointer}
